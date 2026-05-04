@@ -1,0 +1,182 @@
+<!--
+CONTACT PAGE HTML
+THIS PAGE ALLOWS USERS TO SUBMIT QUESTIONS, COMMENTS, AND CONCERNS TO THE TEAM
+IT ALSO HAS LINKS TO EACH SOCIAL MEDIA OUTLET, AND A MAILING ADDRESS FOR RETURNS OR OTHER COMMUNICATIONS
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Contact | Glitch Wax</title>
+    <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+<div class="background-logo"></div>
+
+<header class="site-header">
+    <div class="container header-inner">
+        <a href="index.html" class="logo">
+            <img src="images/logo.png" alt="Glitch Wax logo" class="logo-image">
+        </a>
+
+        <nav class="site-nav">
+            <a href="index.html">Home</a>
+            <a href="store.html">Store</a>
+            <a href="contact.html">Contact</a>
+        </nav>
+    </div>
+</header>
+
+    <main>
+        <section class="contact-hero section">
+            <div class="container">
+                <p class="section-eyebrow">Get in Touch</p>
+                <h1>Questions, custom requests, or wholesale interest?</h1>
+                <p class="section-intro">
+                    Reach out and we’ll get back to you as soon as possible.
+                </p>
+            </div>
+        </section>
+
+        <section class="contact-section section">
+            <div class="container contact-grid">
+                <div class="contact-form-card">
+                    <h2>Send a Message</h2>
+                    <p class="contact-card-intro">
+                        Fill out the form below and make sure your info is correct so Glitch Wax can reply.
+                    </p>
+
+                    <form id="contactForm" class="contact-form" novalidate>
+                        <div class="form-row">
+                            <label for="name">Name</label>
+                            <input
+                                type="text"
+                                id="name"
+                                name="name"
+                                maxlength="60"
+                                autocomplete="name"
+                                required
+                            />
+                            <p class="field-message" id="nameMessage"></p>
+                        </div>
+
+                        <div class="form-row">
+                            <label for="email">Email</label>
+                            <input
+                                type="email"
+                                id="email"
+                                name="email"
+                                maxlength="120"
+                                autocomplete="email"
+                                inputmode="email"
+                                required
+                            />
+                            <p class="field-message" id="emailMessage"></p>
+                        </div>
+
+                        <div class="form-row">
+                            <label for="phone">Phone Number</label>
+                            <input
+                                type="tel"
+                                id="phone"
+                                name="phone"
+                                maxlength="18"
+                                autocomplete="tel"
+                                inputmode="tel"
+                                placeholder="(555) 123-4567"
+                                required
+                            />
+                            <p class="field-message" id="phoneMessage"></p>
+                        </div>
+
+                        <div class="form-row">
+                            <label for="comment">Comment</label>
+                            <textarea
+                                id="comment"
+                                name="comment"
+                                rows="6"
+                                maxlength="500"
+                                required
+                                placeholder="Tell Glitch Wax what you need."
+                            ></textarea>
+                            <div class="comment-meta">
+                                <p class="field-message" id="commentMessage"></p>
+                                <p class="char-counter"><span id="commentCount">0</span>/500</p>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="button button-primary contact-submit-button">Send Message</button>
+
+                        <p id="formStatus" class="form-status" aria-live="polite"></p>
+                    </form>
+                </div>
+
+                <div class="contact-side-column">
+                    <aside class="contact-info-card">
+                        <h2>Find Glitch Wax Online</h2>
+                        <p class="contact-card-intro">
+                            Follow the brand, check updates, and connect through social media.
+                        </p>
+
+                        <div class="social-grid">
+                            <a href="https://www.tiktok.com/@glitchwaxmain" target="_blank" rel="noopener noreferrer" class="social-card" aria-label="TikTok">
+                                <img src="images/tiktok.svg" alt="" class="social-icon-image">
+                                <span class="sr-only">TikTok</span>
+                            </a>
+
+                            <a href="https://www.instagram.com/glitchwax.main?igsh=ZDNxaDJldXppcmZh&utm_source=qr" target="_blank" rel="noopener noreferrer" class="social-card" aria-label="Instagram">
+                                <img src="images/instagram.svg" alt="" class="social-icon-image">
+                                <span class="sr-only">Instagram</span>
+                            </a>
+
+                            <a href="https://www.facebook.com/" target="_blank" rel="noopener noreferrer" class="social-card" aria-label="Facebook">
+                                <img src="images/facebook.svg" alt="" class="social-icon-image">
+                                <span class="sr-only">Facebook</span>
+                            </a>
+
+                            <a href="https://youtube.com/@glitchwax-main?si=bL3-CmelmL3oEpAL" target="_blank" rel="noopener noreferrer" class="social-card" aria-label="YouTube">
+                                <img src="images/youtube.svg" alt="" class="social-icon-image">
+                                <span class="sr-only">YouTube</span>
+                            </a>
+                        </div>
+
+                        <div class="mailing-address-block">
+                            <h3>Mailing Address</h3>
+                            <address>
+                                Glitch Wax<br />
+                                18202 Minnetonka Boulevard<br />
+                                Deephaven, MN 55391
+                            </address>
+                        </div>
+                    </aside>
+
+                    <div class="brand-card brand-glitch-target">
+                        <div class="brand-glitch-layer brand-glitch-base">
+                            <img src="images/logo.png" alt="Glitch Wax logo" class="brand-card-image" />
+                        </div>
+
+                        <div class="brand-glitch-layer brand-glitch-red" aria-hidden="true">
+                            <img src="images/logo.png" alt="" class="brand-card-image" />
+                        </div>
+
+                        <div class="brand-glitch-layer brand-glitch-cyan" aria-hidden="true">
+                            <img src="images/logo.png" alt="" class="brand-card-image" />
+                        </div>
+
+                        <div class="brand-glitch-scan" aria-hidden="true"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <div class="container footer-container">
+            <p>&copy; 2026 Glitch Wax. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>

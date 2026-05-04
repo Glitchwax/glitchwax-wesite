@@ -1,0 +1,205 @@
+<!--
+STORE PAGE HTML
+THIS PAGE LISTS ALL PRODUCTS AVAILABLE, ALLOWS EACH PRODUCT TO BE ADDED TO AN ORDER, AND SUBMITS THE ORDER TO SQUARE
+SQUARE THEN PROCESSES THE ORDER, VERIFIES PRICING, AND GENERATES A SECURE CHECK OUT PAGE
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Store | Glitch Wax</title>
+  <meta name="description" content="Shop Glitch Wax products including Stick O Wax and the 2 Pack.">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="background-logo"></div>
+
+  <header class="site-header">
+    <div class="container header-inner">
+      <a href="index.html" class="logo">
+        <img src="images/logo.png" alt="Glitch Wax logo" class="logo-image">
+      </a>
+
+      <nav class="site-nav">
+        <a href="index.html">Home</a>
+        <a href="store.html">Store</a>
+        <a href="contact.html">Contact</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="order-page">
+    <section class="order-hero">
+      <div class="container">
+        <h1>Place Your Order</h1>
+        <p>
+          Choose your products below.
+        </p>
+      </div>
+    </section>
+
+    <section class="order-section">
+      <div class="container">
+        <div class="order-products-grid">
+
+          <article class="order-card">
+            <h2>
+              <a href="product-single.html">Stick O Wax</a>
+            </h2>
+
+            <div class="order-card-image">
+              <a href="product-single.html">
+                <img src="images/stick-o-wax.jpg" alt="Stick O Wax">
+              </a>
+            </div>
+
+            <div class="order-card-description">
+              <p>2.5 oz top-fill twist container</p>
+              <p>Smooth, consistent glide</p>
+              <p>Available in black and white</p>
+              <p class="order-card-price">$8.50</p>
+            </div>
+
+            <div class="order-card-select">
+              <label for="stick-quantity">Quantity</label>
+              <select id="stick-quantity" class="quantity-select" data-price="8.50" data-product="Stick O Wax">
+                <option value="0">0</option>
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+              </select>
+            </div>
+          </article>
+
+          <article class="order-card">
+            <h2>
+              <a href="product-double.html">Two Pack</a>
+            </h2>
+
+            <div class="order-card-image">
+              <a href="product-double.html">
+                <img src="images/two-pack.jpg" alt="Glitch Wax 2 Pack">
+              </a>
+            </div>
+
+            <div class="order-card-description">
+              <p>Two 2.5 oz wax bars</p>
+              <p>Long-lasting, durable formula</p>
+              <p>Includes free sticker</p>
+              <p class="order-card-price">$10.00</p>
+            </div>
+
+            <div class="order-card-select">
+              <label for="two-pack-quantity">Quantity</label>
+              <select id="two-pack-quantity" class="quantity-select" data-price="10.00" data-product="2 Pack">
+                <option value="0">0</option>
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+              </select>
+            </div>
+          </article>
+
+        </div>
+
+        <section class="order-summary">
+          <div class="order-summary-card">
+            <h2>Order Summary</h2>
+
+            <div class="summary-line">
+              <span>Items subtotal</span>
+              <span id="subtotal">$0.00</span>
+            </div>
+
+            <p class="summary-note">
+              Tax, shipping, and transaction fees will be calculated on the next screen.
+            </p>
+
+            <button type="button" id="checkout-btn" class="checkout-btn">
+              Continue to Checkout
+            </button>
+
+            <p class="summary-small">
+              You will be redirected to a secure checkout page after confirming your order.
+            </p>
+          </div>
+        </section>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <p>&copy; 2026 Glitch Wax. All rights reserved.</p>
+      <div class="footer-links">
+        <a href="index.html">Home</a>
+        <a href="store.html">Store</a>
+        <a href="contact.html">Contact</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    const quantitySelects = document.querySelectorAll('.quantity-select');
+    const subtotalElement = document.getElementById('subtotal');
+    const checkoutButton = document.getElementById('checkout-btn');
+
+    function updateSubtotal() {
+      let subtotal = 0;
+
+      quantitySelects.forEach((select) => {
+        const price = parseFloat(select.dataset.price);
+        const quantity = parseInt(select.value, 10) || 0;
+        subtotal += price * quantity;
+      });
+
+      subtotalElement.textContent = '$' + subtotal.toFixed(2);
+    }
+
+    function applyPreselectedProduct() {
+      const params = new URLSearchParams(window.location.search);
+      const product = params.get('product');
+
+      if (product === 'stick') {
+        const stickSelect = document.getElementById('stick-quantity');
+        if (stickSelect) {
+          stickSelect.value = '1';
+        }
+      }
+
+      if (product === 'two-pack') {
+        const twoPackSelect = document.getElementById('two-pack-quantity');
+        if (twoPackSelect) {
+          twoPackSelect.value = '1';
+        }
+      }
+
+      updateSubtotal();
+    }
+
+    quantitySelects.forEach((select) => {
+      select.addEventListener('change', updateSubtotal);
+    });
+
+    checkoutButton.addEventListener('click', () => {
+      const stickQty = parseInt(document.getElementById('stick-quantity').value, 10) || 0;
+      const twoPackQty = parseInt(document.getElementById('two-pack-quantity').value, 10) || 0;
+
+      if (stickQty === 0 && twoPackQty === 0) {
+        alert('Please select at least one product before continuing.');
+        return;
+      }
+
+      alert('Later, this button will send the selected order into the Square checkout flow.');
+    });
+
+    applyPreselectedProduct();
+    updateSubtotal();
+  </script>
+</body>
+</html>
