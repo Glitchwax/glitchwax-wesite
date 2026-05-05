@@ -185,6 +185,10 @@ SQUARE THEN PROCESSES THE ORDER, VERIFIES PRICING, AND GENERATES A SECURE CHECK 
     quantitySelects.forEach((select) => {
       select.addEventListener('change', updateSubtotal);
     });
+function resetCheckoutButton() {
+  checkoutButton.disabled = false;
+  checkoutButton.textContent = 'Continue to Checkout';
+}
 
 checkoutButton.addEventListener('click', async () => {
   const stickQty = parseInt(document.getElementById('stick-quantity').value, 10) || 0;
@@ -215,8 +219,7 @@ checkoutButton.addEventListener('click', async () => {
     if (!response.ok) {
       console.error(data);
       alert('Something went wrong creating checkout. Please try again.');
-      checkoutButton.disabled = false;
-      checkoutButton.textContent = 'Continue to Checkout';
+      resetCheckoutButton();
       return;
     }
 
@@ -224,13 +227,14 @@ checkoutButton.addEventListener('click', async () => {
   } catch (error) {
     console.error(error);
     alert('Something went wrong creating checkout. Please try again.');
-    checkoutButton.disabled = false;
-    checkoutButton.textContent = 'Continue to Checkout';
+    resetCheckoutButton();
   }
 });
 
-    applyPreselectedProduct();
-    updateSubtotal();
-  </script>
-</body>
-</html>
+window.addEventListener('pageshow', function () {
+  resetCheckoutButton();
+  updateSubtotal();
+});
+
+applyPreselectedProduct();
+updateSubtotal();
