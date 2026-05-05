@@ -11,7 +11,7 @@
   },
   "vars": {
     "SQUARE_ENVIRONMENT": "sandbox",
-    "SQUARE_LOCATION_ID": "PASTE_THE_REAL_LOCATION_ID_HERE"
+    "SQUARE_LOCATION_ID": "LT3QBZM25T0R6"
   },
   "compatibility_flags": [
     "nodejs_compat"
