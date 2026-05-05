@@ -9,6 +9,10 @@
   "assets": {
     "directory": "."
   },
+  "vars": {
+    "SQUARE_ENVIRONMENT": "sandbox",
+    "SQUARE_LOCATION_ID": "PASTE_THE_REAL_LOCATION_ID_HERE"
+  },
   "compatibility_flags": [
     "nodejs_compat"
   ]
