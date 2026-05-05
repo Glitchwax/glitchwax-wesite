@@ -161,6 +161,11 @@ SQUARE THEN PROCESSES THE ORDER, VERIFIES PRICING, AND GENERATES A SECURE CHECK 
       subtotalElement.textContent = '$' + subtotal.toFixed(2);
     }
 
+    function resetCheckoutButton() {
+      checkoutButton.disabled = false;
+      checkoutButton.textContent = 'Continue to Checkout';
+    }
+
     function applyPreselectedProduct() {
       const params = new URLSearchParams(window.location.search);
       const product = params.get('product');
@@ -185,56 +190,55 @@ SQUARE THEN PROCESSES THE ORDER, VERIFIES PRICING, AND GENERATES A SECURE CHECK 
     quantitySelects.forEach((select) => {
       select.addEventListener('change', updateSubtotal);
     });
-function resetCheckoutButton() {
-  checkoutButton.disabled = false;
-  checkoutButton.textContent = 'Continue to Checkout';
-}
 
-checkoutButton.addEventListener('click', async () => {
-  const stickQty = parseInt(document.getElementById('stick-quantity').value, 10) || 0;
-  const twoPackQty = parseInt(document.getElementById('two-pack-quantity').value, 10) || 0;
+    checkoutButton.addEventListener('click', async () => {
+      const stickQty = parseInt(document.getElementById('stick-quantity').value, 10) || 0;
+      const twoPackQty = parseInt(document.getElementById('two-pack-quantity').value, 10) || 0;
 
-  if (stickQty === 0 && twoPackQty === 0) {
-    alert('Please select at least one product before continuing.');
-    return;
-  }
+      if (stickQty === 0 && twoPackQty === 0) {
+        alert('Please select at least one product before continuing.');
+        return;
+      }
 
-  checkoutButton.disabled = true;
-  checkoutButton.textContent = 'Creating checkout...';
+      checkoutButton.disabled = true;
+      checkoutButton.textContent = 'Creating checkout...';
 
-  try {
-    const response = await fetch('/api/create-checkout', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        stickOWaxQty: stickQty,
-        doublePackQty: twoPackQty
-      })
+      try {
+        const response = await fetch('/api/create-checkout', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            stickOWaxQty: stickQty,
+            doublePackQty: twoPackQty
+          })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          console.error(data);
+          alert('Something went wrong creating checkout. Please try again.');
+          resetCheckoutButton();
+          return;
+        }
+
+        window.location.href = data.checkoutUrl;
+      } catch (error) {
+        console.error(error);
+        alert('Something went wrong creating checkout. Please try again.');
+        resetCheckoutButton();
+      }
     });
 
-    const data = await response.json();
-
-    if (!response.ok) {
-      console.error(data);
-      alert('Something went wrong creating checkout. Please try again.');
+    window.addEventListener('pageshow', function () {
       resetCheckoutButton();
-      return;
-    }
+      updateSubtotal();
+    });
 
-    window.location.href = data.checkoutUrl;
-  } catch (error) {
-    console.error(error);
-    alert('Something went wrong creating checkout. Please try again.');
-    resetCheckoutButton();
-  }
-});
-
-window.addEventListener('pageshow', function () {
-  resetCheckoutButton();
-  updateSubtotal();
-});
-
-applyPreselectedProduct();
-updateSubtotal();
+    applyPreselectedProduct();
+    updateSubtotal();
+  </script>
+</body>
+</html>
