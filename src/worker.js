@@ -74,6 +74,18 @@ async function handleCreateCheckout(request, env) {
         ? "https://connect.squareup.com"
         : "https://connect.squareupsandbox.com";
 
+    const squareRequestBody = {
+      idempotency_key: crypto.randomUUID(),
+      order: {
+        location_id: env.SQUARE_LOCATION_ID,
+        line_items: lineItems
+      },
+      checkout_options: {
+        ask_for_shipping_address: true,
+        redirect_url: "https://glitchwax.com/order-success.html"
+      }
+    };
+
     const squareResponse = await fetch(
       `${squareBaseUrl}/v2/online-checkout/payment-links`,
       {
@@ -83,35 +95,40 @@ async function handleCreateCheckout(request, env) {
           "Content-Type": "application/json",
           "Square-Version": "2025-04-16"
         },
-        body: JSON.stringify({
-          idempotency_key: crypto.randomUUID(),
-          order: {
-            location_id: env.SQUARE_LOCATION_ID,
-            line_items: lineItems
-          },
-          checkout_options: {
-            ask_for_shipping_address: true,
-            redirect_url: "https://glitchwax.com/order-success.html"
-          }
-        })
+        body: JSON.stringify(squareRequestBody)
       }
     );
 
-    const data = await squareResponse.json();
+    const squareResponseText = await squareResponse.text();
+
+    let squareData;
+    try {
+      squareData = JSON.parse(squareResponseText);
+    } catch (error) {
+      squareData = squareResponseText;
+    }
 
     if (!squareResponse.ok) {
       return Response.json(
         {
           error: "Square checkout creation failed.",
           squareStatus: squareResponse.status,
-          squareResponse: data
+          squareResponse: squareData,
+          rawSquareResponse: squareResponseText,
+          sentToSquare: {
+            environment: env.SQUARE_ENVIRONMENT,
+            locationId: env.SQUARE_LOCATION_ID,
+            lineItems: lineItems,
+            checkoutOptions: squareRequestBody.checkout_options
+          }
         },
         { status: 500 }
       );
     }
 
     return Response.json({
-      checkoutUrl: data.payment_link.url
+      checkoutUrl: squareData.payment_link.url,
+      squareResponse: squareData
     });
   } catch (error) {
     return Response.json(
