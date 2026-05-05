@@ -13,7 +13,7 @@ export default {
 async function handleCreateCheckout(request, env) {
   if (request.method !== "POST") {
     return Response.json(
-      { error: "Method not allowed. Use POST." },
+      { error: "Method not allowed." },
       { status: 405 }
     );
   }
@@ -33,7 +33,7 @@ async function handleCreateCheckout(request, env) {
       doublePackQty > 20
     ) {
       return Response.json(
-        { error: "Invalid quantity." },
+        { error: "Please select a valid quantity." },
         { status: 400 }
       );
     }
@@ -104,38 +104,43 @@ async function handleCreateCheckout(request, env) {
     let squareData;
     try {
       squareData = JSON.parse(squareResponseText);
-    } catch (error) {
-      squareData = squareResponseText;
+    } catch (parseError) {
+      squareData = null;
     }
 
     if (!squareResponse.ok) {
+      console.error("Square checkout creation failed.", {
+        status: squareResponse.status,
+        response: squareData || squareResponseText
+      });
+
       return Response.json(
-        {
-          error: "Square checkout creation failed.",
-          squareStatus: squareResponse.status,
-          squareResponse: squareData,
-          rawSquareResponse: squareResponseText,
-          sentToSquare: {
-            environment: env.SQUARE_ENVIRONMENT,
-            locationId: env.SQUARE_LOCATION_ID,
-            lineItems: lineItems,
-            checkoutOptions: squareRequestBody.checkout_options
-          }
-        },
+        { error: "Checkout could not be created. Please try again." },
+        { status: 500 }
+      );
+    }
+
+    if (!squareData || !squareData.payment_link || !squareData.payment_link.url) {
+      console.error("Square checkout response missing payment link.", {
+        response: squareData || squareResponseText
+      });
+
+      return Response.json(
+        { error: "Checkout could not be created. Please try again." },
         { status: 500 }
       );
     }
 
     return Response.json({
-      checkoutUrl: squareData.payment_link.url,
-      squareResponse: squareData
+      checkoutUrl: squareData.payment_link.url
     });
   } catch (error) {
+    console.error("Checkout function error.", {
+      message: error.message
+    });
+
     return Response.json(
-      {
-        error: "Server error creating checkout.",
-        message: error.message
-      },
+      { error: "Checkout could not be created. Please try again." },
       { status: 500 }
     );
   }
