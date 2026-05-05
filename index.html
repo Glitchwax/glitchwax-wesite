@@ -1,237 +1,98 @@
-<!--
-HOME PAGE HTML
-THIS PAGE IS THE MAIN HOME PAGE. IT SHOWS VARIOUS PICTURES OF THE PRODUCT, AS WELL AS USE CASES
-IT ALSO BREAKS DOWN THE ABSTRACT SPECIFICS OF THE COMPANY, INCLUDING WHAT THEY DO AND THE POINT OF USING BOARD WAX
--->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Glitch Wax | Board Wax for Skate, Snow, and More</title>
-    <meta name="description" content="Glitch Wax makes board wax for skateboarding, snowboarding, longboarding, and more. Shop online and learn what makes the difference.">
-    <link rel="stylesheet" href="styles.css">
+    <title>Glitch Wax | Coming Soon</title>
+    <style>
+        :root {
+            --bg-dark: #0b0b0f;
+            --text-main: #ffffff;
+            --text-muted: #c7c7d1;
+            --accent: #ff2bd6;
+            --accent-2: #00f5ff;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: Arial, Helvetica, sans-serif;
+            background:
+                radial-gradient(circle at top left, rgba(255, 43, 214, 0.18), transparent 35%),
+                radial-gradient(circle at bottom right, rgba(0, 245, 255, 0.16), transparent 35%),
+                var(--bg-dark);
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .lander {
+            max-width: 700px;
+            width: 100%;
+            padding: 3rem 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            border-radius: 24px;
+            background: rgba(10, 10, 16, 0.72);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+            backdrop-filter: blur(10px);
+        }
+
+        .logo {
+            max-width: 220px;
+            width: 70%;
+            height: auto;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            margin: 0 0 1rem;
+            font-size: clamp(2.2rem, 7vw, 4.5rem);
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+        }
+
+        .glitch {
+            text-shadow:
+                2px 0 var(--accent),
+                -2px 0 var(--accent-2);
+        }
+
+        p {
+            margin: 0 auto;
+            max-width: 540px;
+            color: var(--text-muted);
+            font-size: 1.15rem;
+            line-height: 1.6;
+        }
+
+        .small {
+            margin-top: 2rem;
+            font-size: 0.95rem;
+            opacity: 0.8;
+        }
+    </style>
 </head>
 <body>
-    <div id="glitch-overlay"></div>
-    <div class="background-logo"></div>
+    <main class="lander">
+        <img src="images/logo.png" alt="Glitch Wax logo" class="logo">
 
-    <header class="site-header">
-        <div class="container header-inner">
-            <a href="index.html" class="logo">
-                <img src="images/logo.png" alt="Glitch Wax logo" class="logo-image">
-            </a>
+        <h1 class="glitch">Coming Soon</h1>
 
-            <nav class="site-nav">
-                <a href="index.html">Home</a>
-                <a href="store.html">Store</a>
-                <a href="contact.html">Contact</a>
-            </nav>
-        </div>
-    </header>
+        <p>
+            Glitch Wax is getting ready to launch. Check back soon for board wax,
+            product details, and ordering information.
+        </p>
 
-    <main>
-        <section class="hero hero-glitch-target">
-            <div class="hero-glitch-layer hero-glitch-base">
-                <div class="container hero-grid">
-                    <div class="hero-text">
-                        <p class="eyebrow">For Skaters, By Skaters</p>
-                        <h1>Hand Made Skate Wax, Made With Value, Care, and Love</h1>
-                        <p class="hero-description">
-                            We glitched the system with Glitch Wax. We curated it for skaters to learn and progress within the world of skating.
-                            We set out to make wax we’d actually buy—at a price that made sense.
-                            We sell skate wax that has been developed and crafted at home for skaters, by skaters.
-                            
-                        </p>
-
-                        <div class="hero-buttons">
-                            <a href="store.html" class="button button-primary">Shop Now</a>
-                            <a href="#about-wax" class="button button-secondary">Learn More</a>
-                        </div>
-                    </div>
-
-                    <div class="hero-media">
-                        <img src="images/hero.jpg" alt="Skateboard action shot">
-                    </div>
-                </div>
-            </div>
-
-            <div class="hero-glitch-layer hero-glitch-red" aria-hidden="true">
-                <div class="container hero-grid">
-                    <div class="hero-text">
-                        <p class="eyebrow">Wax Up. Ride Better.</p>
-                        <h1>Board wax made for grip, feel, and control.</h1>
-                        <p class="hero-description">
-                            Glitch Wax helps riders get better traction and better board feel,
-                            whether you are skating, snowboarding, longboarding, or just looking
-                            for a cleaner setup that works.
-                        </p>
-
-                        <div class="hero-buttons">
-                            <a href="store.html" class="button button-primary" tabindex="-1">Shop Now</a>
-                            <a href="#about-wax" class="button button-secondary" tabindex="-1">Learn More</a>
-                        </div>
-                    </div>
-
-                    <div class="hero-media">
-                        <img src="images/hero.jpg" alt="">
-                    </div>
-                </div>
-            </div>
-
-            <div class="hero-glitch-layer hero-glitch-cyan" aria-hidden="true">
-                <div class="container hero-grid">
-                    <div class="hero-text">
-                        <p class="eyebrow">Wax Up. Ride Better.</p>
-                        <h1>Board wax made for grip, feel, and control.</h1>
-                        <p class="hero-description">
-                            Glitch Wax helps riders get better traction and better board feel,
-                            whether you are skating, snowboarding, longboarding, or just looking
-                            for a cleaner setup that works.
-                        </p>
-
-                        <div class="hero-buttons">
-                            <a href="store.html" class="button button-primary" tabindex="-1">Shop Now</a>
-                            <a href="#about-wax" class="button button-secondary" tabindex="-1">Learn More</a>
-                        </div>
-                    </div>
-
-                    <div class="hero-media">
-                        <img src="images/hero.jpg" alt="">
-                    </div>
-                </div>
-            </div>
-
-            <div class="hero-glitch-scan" aria-hidden="true"></div>
-        </section>
-
-        <section class="info-section" id="about-wax">
-            <div class="container narrow">
-                <p class="section-label">What is board wax?</p>
-                <h2>Skate Wax Was Created To Make Obstacles Grindable</h2>
-                <p>
-                    Board wax is used to enhance slides and grinds, allowing for a more smooth grind and a longer distance.
-                    Applied on the bottom of a board or on the obstacle itself, board wax is an easy way to enhance your experience.
-                    Skate wax allows even the most inexperienced rider to feel more engaged in the sport.
-                </p>
-            </div>
-        </section>
-
-<section class="feature-section">
-    <div class="container feature-layout">
-        <div class="feature-video-column">
-            <div class="feature-video-card">
-                <video
-                    class="feature-video"
-                    muted
-                    loop
-                    playsinline
-                    preload="metadata"
-                    data-autoplay-once
-                >
-                    <source src="images/why-glitch-wax.mp4" type="video/mp4">
-                    Your browser does not support the video tag.
-                </video>
-            </div>
-        </div>
-
-        <div class="product-description">
-            <p class="section-label">Why Glitch Wax?</p>
-            <h2>A Simple Container With An Advanced Product</h2>
-
-            <div class="product-description-copy">
-                <p>Glitch Wax is a focused brand, offering only two products:</p>
-
-                <p><strong>The Stick o Wax</strong>, a deodorant style wax made to be discreet and portable</p>
-
-                <p><strong>The Two Pack</strong>, two disks of traditional wax, crafted nontraditionally</p>
-
-                <p>
-                    Both products were crafted with a recipe that combines temperature resistance.
-                    Less frozen wax in the cold. Less melted wax in the heat.
-                </p>
-            </div>
-
-            <div class="feature-points">
-                <div class="feature-point">
-                    <h3>Value</h3>
-                    <p>Glitch Wax is a home crafted, hand made product, at a price <i>we</i> would pay</p>
-                </div>
-
-                <div class="feature-point">
-                    <h3>Application</h3>
-                    <p>Glitch Wax is easy to transport, easy to apply, and <i>dangerous</i> to ride</p>
-                </div>
-
-                <div class="feature-point">
-                    <h3>Community</h3>
-                    <p>Designed, tested, and used by <i>passionate</i> riders, Glitch Wax is For Skaters, By Skaters</p>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-
-        <section class="products-preview">
-            <div class="container">
-                <div class="section-heading">
-                    <p class="section-label">Our Products</p>
-                    <h2>Stick With The Traditional Or Leave The Pack Behind</h2>
-                </div>
-
-                <div class="product-grid">
-                    <article class="product-card">
-                        <img src="images/product-double.jpg" alt="Double pack wax">
-                        <h3>Two Pack</h3>
-                        <p class="price">$10.00</p>
-                        <p>
-                            For skaters who want more wax for more occasions, the Two Pack is still our premium wax
-                        </p>
-                        <a href="product-double.html" class="button button-primary">View Product</a>
-                    </article>
-
-                    <article class="product-card">
-                        <img src="images/product-single.jpg" alt="Single stick wax">
-                        <h3>Stick o Wax</h3>
-                        <p class="price">$8.50</p>
-                        <p>
-                            A smartly packaged, and easily portable option, the Stick o Wax holds 2.5oz of our premium wax
-                        </p>
-                        <a href="product-single.html" class="button button-primary">View Product</a>
-                    </article>                    
-                </div>
-            </div>
-        </section>
-
-        <section class="cta-section">
-            <div class="container narrow cta-box">
-                <p class="section-label">Ready to Ride?</p>
-                <h2>Check out the store and grab your wax.</h2>
-                <p>
-                    Browse the current Glitch Wax options and choose the product that works best for you.
-                </p>
-                <a href="store.html" class="button button-primary">Go to Store</a>
-            </div>
-        </section>
+        <p class="small">
+            Quality board wax. Great value. No glitch in the system.
+        </p>
     </main>
-
-    <footer class="site-footer">
-        <div class="container footer-inner">
-            <p>&copy; 2026 Glitch Wax. All rights reserved.</p>
-            <div class="footer-links">
-                <a href="index.html">Home</a>
-                <a href="store.html">Store</a>
-                <a href="contact.html">Contact</a>
-            </div>
-        </div>
-    </footer>
-
-    <script src="script.js"></script>
 </body>
 </html>
-
-<!--
-THIS WEBSITE IS A PRODUCT OF The Temp Solution, LLC. ALL CODE, IMAGES, AND APPLICATIONS ARE SOLELY OWNED BY Glitch Wax, LLC. ANY ATTEMPT TO RECREATE, REVERSE ENGINEER, OR REPLICATE THIS WEBSITE WILL BE PROSECUTED TO THE FULLEST EXTENT OF THE LAW
-
-IF YOU'RE VIEWING THIS COMMENT, NICE JOB. I RECOMMEND READING "PROEJCT HAIL MARY" BY ANDY WEIR, AND THEN GOING TO SEE THE MOVIE
--->
