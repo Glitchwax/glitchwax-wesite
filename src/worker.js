@@ -1,3 +1,6 @@
+const STICK_O_WAX_VARIATION_ID = "J4L4WTWW4JO7UTEHUYQVR7LZ";
+const DOUBLE_PACK_VARIATION_ID = "ZWBSYUZ6PGFILSV5S5BZ7BFG";
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -49,23 +52,15 @@ async function handleCreateCheckout(request, env) {
 
     if (stickOWaxQty > 0) {
       lineItems.push({
-        name: "Stick o Wax",
-        quantity: String(stickOWaxQty),
-        base_price_money: {
-          amount: 850,
-          currency: "USD"
-        }
+        catalog_object_id: STICK_O_WAX_VARIATION_ID,
+        quantity: String(stickOWaxQty)
       });
     }
 
     if (doublePackQty > 0) {
       lineItems.push({
-        name: "Double Pack",
-        quantity: String(doublePackQty),
-        base_price_money: {
-          amount: 1000,
-          currency: "USD"
-        }
+        catalog_object_id: DOUBLE_PACK_VARIATION_ID,
+        quantity: String(doublePackQty)
       });
     }
 
