@@ -73,8 +73,11 @@ async function handleCreateCheckout(request, env) {
       idempotency_key: crypto.randomUUID(),
       order: {
         location_id: env.SQUARE_LOCATION_ID,
-        line_items: lineItems
-      },
+        line_items: lineItems,
+        pricing_options: {
+            auto_apply_taxes: true
+        }
+},
       checkout_options: {
         ask_for_shipping_address: true,
         redirect_url: "https://glitchwax.com/order-success.html"
