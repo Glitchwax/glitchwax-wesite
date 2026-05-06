@@ -10,8 +10,8 @@
     "directory": "."
   },
   "vars": {
-    "SQUARE_ENVIRONMENT": "sandbox",
-    "SQUARE_LOCATION_ID": "LT3QBZM25T0R6"
+    "SQUARE_ENVIRONMENT": "production",
+    "SQUARE_LOCATION_ID": "LPA9XDRHBBB1Q"
   },
   "compatibility_flags": [
     "nodejs_compat"
