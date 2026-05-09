@@ -11,8 +11,16 @@
   },
   "vars": {
     "SQUARE_ENVIRONMENT": "production",
-    "SQUARE_LOCATION_ID": "LPA9XDRHBBB1Q"
+    "SQUARE_LOCATION_ID": "LPA9XDRHBBB1Q",
+    "CONTACT_FROM_EMAIL": "contact@glitchwax.com",
+    "CONTACT_TO_EMAIL": "willapau000@gmail.com"
   },
+  "send_email": [
+    {
+      "name": "CONTACT_EMAIL",
+      "destination_address": "willapau000@gmail.com"
+    }
+  ],
   "compatibility_flags": [
     "nodejs_compat"
   ]
