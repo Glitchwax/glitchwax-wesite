@@ -46,9 +46,7 @@ async function handleContactForm(request, env) {
       });
 
       return Response.json(
-        {
-          error: "Contact form is missing: " + missingConfig.join(", ")
-        },
+        { error: "Contact form is not configured yet." },
         { status: 500 }
       );
     }
@@ -70,6 +68,7 @@ async function handleContactForm(request, env) {
 
     const emailBody =
 `New message from the Glitch Wax website contact form.
+
 Name:
 ${contact.name}
 
