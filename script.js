@@ -271,21 +271,63 @@ if (contactForm) {
         }
     });
 
-    contactForm.addEventListener("submit", function (event) {
-        event.preventDefault();
+contactForm.addEventListener("submit", async function (event) {
+    event.preventDefault();
 
-        const isNameValid = validateName();
-        const isEmailValid = validateEmail();
-        const isPhoneValid = validatePhone();
-        const isCommentValid = validateComment();
+    const isNameValid = validateName();
+    const isEmailValid = validateEmail();
+    const isPhoneValid = validatePhone();
+    const isCommentValid = validateComment();
 
-        if (!isNameValid || !isEmailValid || !isPhoneValid || !isCommentValid) {
-            formStatus.textContent = "Please fix the highlighted fields before submitting.";
-            return;
+    if (!isNameValid || !isEmailValid || !isPhoneValid || !isCommentValid) {
+        formStatus.textContent = "Please fix the highlighted fields before submitting.";
+        return;
+    }
+
+    const submitButton = contactForm.querySelector("button[type='submit']");
+
+    const formData = {
+        name: nameInput.value.trim(),
+        email: emailInput.value.trim(),
+        phone: phoneInput.value.trim(),
+        comment: commentInput.value.trim()
+    };
+
+    try {
+        submitButton.disabled = true;
+        submitButton.textContent = "Sending...";
+        formStatus.textContent = "Sending your message...";
+
+        const response = await fetch("/api/contact", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(formData)
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(result.error || "Something went wrong. Please try again.");
         }
 
-        formStatus.textContent = "Form validation passed. Connect this form to your email service or backend next.";
-    });
+        contactForm.reset();
+
+        clearState(nameInput, nameMessage);
+        clearState(emailInput, emailMessage);
+        clearState(phoneInput, phoneMessage);
+        clearState(commentInput, commentMessage);
+
+        commentCount.textContent = "0";
+        formStatus.textContent = "Message sent successfully. Glitch Wax will get back to you soon.";
+    } catch (error) {
+        formStatus.textContent = error.message || "Message could not be sent. Please try again later.";
+    } finally {
+        submitButton.disabled = false;
+        submitButton.textContent = "Send Message";
+    }
+});
 }
 
 
