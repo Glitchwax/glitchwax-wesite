@@ -26,20 +26,29 @@ async function handleContactForm(request, env) {
   }
 
   try {
-    if (!env.CONTACT_EMAIL) {
-      console.error("Missing CONTACT_EMAIL binding.");
+    const missingConfig = [];
 
-      return Response.json(
-        { error: "Contact form is not configured yet." },
-        { status: 500 }
-      );
+    if (!env.CONTACT_EMAIL) {
+      missingConfig.push("CONTACT_EMAIL binding");
     }
 
-    if (!env.CONTACT_FROM_EMAIL || !env.CONTACT_TO_EMAIL) {
-      console.error("Missing contact email environment variables.");
+    if (!env.CONTACT_FROM_EMAIL) {
+      missingConfig.push("CONTACT_FROM_EMAIL variable");
+    }
+
+    if (!env.CONTACT_TO_EMAIL) {
+      missingConfig.push("CONTACT_TO_EMAIL variable");
+    }
+
+    if (missingConfig.length > 0) {
+      console.error("Missing contact form configuration.", {
+        missing: missingConfig
+      });
 
       return Response.json(
-        { error: "Contact form is not configured yet." },
+        {
+          error: "Contact form is missing: " + missingConfig.join(", ")
+        },
         { status: 500 }
       );
     }
@@ -61,7 +70,6 @@ async function handleContactForm(request, env) {
 
     const emailBody =
 `New message from the Glitch Wax website contact form.
-
 Name:
 ${contact.name}
 
