@@ -145,8 +145,9 @@
 
         .game-stats {
             display: flex;
+            flex-wrap: wrap;
             justify-content: center;
-            gap: 1.5rem;
+            gap: 1rem 1.5rem;
             margin: 1rem 0 0.75rem;
             color: var(--text-muted);
             font-size: 0.95rem;
@@ -154,6 +155,38 @@
 
         .game-stats strong {
             color: var(--text-main);
+        }
+
+        .wax-meter-wrap {
+            max-width: 420px;
+            margin: 0 auto 0.9rem;
+            text-align: left;
+        }
+
+        .wax-meter-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.35rem;
+            color: var(--text-muted);
+            font-size: 0.82rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .wax-meter {
+            height: 14px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.07);
+        }
+
+        .wax-meter-fill {
+            width: 50%;
+            height: 100%;
+            border-radius: 999px;
+            background: linear-gradient(90deg, var(--accent), var(--accent-2));
+            transition: width 0.12s linear;
         }
 
         .game-canvas-wrap {
@@ -193,10 +226,6 @@
             filter: brightness(1.1);
         }
 
-        .hidden {
-            display: none;
-        }
-
         @media (max-width: 620px) {
             body {
                 padding: 1.25rem;
@@ -220,7 +249,7 @@
             }
 
             .game-stats {
-                gap: 1rem;
+                gap: 0.75rem 1rem;
                 font-size: 0.85rem;
             }
         }
@@ -263,20 +292,33 @@
             </div>
         </section>
 
-        <section class="game-section" aria-label="Skater barrel jump game">
-            <h2 class="game-heading">Kill Time. Jump Barrels.</h2>
+        <section class="game-section" aria-label="Glitch Grind skate wax game">
+            <h2 class="game-heading">Glitch Grind</h2>
 
             <p class="game-instructions">
-                Press Space, click, or tap to jump. Avoid the barrels and keep the run alive.
+                Jump for wax. Jump over barrels. Land on rails to grind for points.
+                Every 200 points, the game gets faster.
             </p>
 
             <div class="game-stats">
                 <span>Score: <strong id="game-score">0</strong></span>
                 <span>Best: <strong id="game-best">0</strong></span>
+                <span>Level: <strong id="game-level">1</strong></span>
+            </div>
+
+            <div class="wax-meter-wrap" aria-label="Wax inventory meter">
+                <div class="wax-meter-label">
+                    <span>Wax Inventory</span>
+                    <span id="wax-value">50%</span>
+                </div>
+
+                <div class="wax-meter">
+                    <div class="wax-meter-fill" id="wax-fill"></div>
+                </div>
             </div>
 
             <div class="game-canvas-wrap">
-                <canvas id="skater-game" width="640" height="220" aria-label="A small skater jumping over barrels"></canvas>
+                <canvas id="skater-game" width="640" height="220" aria-label="A small skater collecting wax, grinding rails, and jumping barrels"></canvas>
             </div>
 
             <button class="game-button" id="game-button" type="button">Start Game</button>
@@ -336,18 +378,47 @@
         const ctx = canvas.getContext("2d");
         const scoreElement = document.getElementById("game-score");
         const bestElement = document.getElementById("game-best");
+        const levelElement = document.getElementById("game-level");
+        const waxFillElement = document.getElementById("wax-fill");
+        const waxValueElement = document.getElementById("wax-value");
         const gameButton = document.getElementById("game-button");
 
         const gameWidth = canvas.width;
         const gameHeight = canvas.height;
         const groundY = 172;
 
+        const MAX_WAX = 100;
+        const STARTING_WAX = 50;
+        const WAX_PICKUP_AMOUNT = 25;
+        const WAX_DRAIN_RATE = 15;
+        const GRIND_SCORE_RATE = 75;
+        const POINTS_PER_LEVEL = 200;
+        const SPEED_INCREASE_PER_LEVEL = 0.15;
+
+        const waxImage = new Image();
+        let waxImageLoaded = false;
+
+        waxImage.onload = function() {
+            waxImageLoaded = true;
+        };
+
+        waxImage.src = "images/game-wax.png";
+
         let gameState = "ready";
         let lastFrameTime = 0;
-        let obstacleTimer = 0;
-        let obstacleInterval = 1200;
         let score = 0;
-        let bestScore = Number(localStorage.getItem("glitchWaxBarrelBestScore") || 0);
+        let lastWholeScore = 0;
+        let bestScore = Number(localStorage.getItem("glitchWaxGrindBestScoreV3") || 0);
+        let wax = STARTING_WAX;
+        let gameOverReason = "";
+        let isGrinding = false;
+
+        let pickupTimer = 0;
+        let pickupInterval = 4500;
+        let railTimer = 0;
+        let railInterval = 2200;
+        let barrelTimer = 0;
+        let barrelInterval = 3000;
 
         const player = {
             x: 72,
@@ -357,30 +428,80 @@
             velocityY: 0,
             gravity: 0.75,
             jumpPower: -14,
-            grounded: true
+            grounded: true,
+            onRail: false
         };
 
-        let obstacles = [];
+        let waxPickups = [];
+        let grindRails = [];
+        let barrels = [];
+        let scorePopups = [];
 
         bestElement.textContent = bestScore;
+        updateWaxDisplay();
+        updateLevelDisplay();
+
+        function getCompletedLevels() {
+            return Math.floor(score / POINTS_PER_LEVEL);
+        }
+
+        function getDisplayLevel() {
+            return getCompletedLevels() + 1;
+        }
+
+        function getSpeedMultiplier() {
+            return 1 + (getCompletedLevels() * SPEED_INCREASE_PER_LEVEL);
+        }
+
+        function updateLevelDisplay() {
+            levelElement.textContent = getDisplayLevel();
+        }
+
+        function updateWaxDisplay() {
+            const roundedWax = Math.max(0, Math.round(wax));
+
+            waxFillElement.style.width = roundedWax + "%";
+            waxValueElement.textContent = roundedWax + "%";
+        }
 
         function resetGame() {
             gameState = "running";
+            gameOverReason = "";
+            isGrinding = false;
+
             player.y = groundY - player.height;
             player.velocityY = 0;
             player.grounded = true;
-            obstacles = [];
-            obstacleTimer = 0;
-            obstacleInterval = 1200;
+            player.onRail = false;
+
+            waxPickups = [];
+            grindRails = [];
+            barrels = [];
+            scorePopups = [];
+
+            pickupTimer = 0;
+            pickupInterval = 4200;
+            railTimer = 0;
+            railInterval = 1800;
+            barrelTimer = 0;
+            barrelInterval = 2600;
+
             score = 0;
+            lastWholeScore = 0;
+            wax = STARTING_WAX;
+
             scoreElement.textContent = "0";
+            levelElement.textContent = "1";
             gameButton.textContent = "Jump";
+
+            updateWaxDisplay();
         }
 
         function jump() {
             if (player.grounded) {
                 player.velocityY = player.jumpPower;
                 player.grounded = false;
+                player.onRail = false;
             }
         }
 
@@ -395,94 +516,285 @@
             }
         }
 
-        function spawnObstacle() {
+        function spawnWaxPickup() {
+            if (waxPickups.length > 0) {
+                return;
+            }
+
+            const possibleYPositions = [
+                groundY - 116,
+                groundY - 104,
+                groundY - 92
+            ];
+
+            const y = possibleYPositions[Math.floor(Math.random() * possibleYPositions.length)];
+
+            waxPickups.push({
+                x: gameWidth + 30,
+                y: y,
+                width: 38,
+                height: 38,
+                bobOffset: Math.random() * Math.PI * 2
+            });
+
+            pickupInterval = 4500 + Math.random() * 2500;
+        }
+
+        function spawnGrindRail() {
+            const railWidth = 150 + Math.random() * 130;
+
+            grindRails.push({
+                x: gameWidth + 30,
+                y: groundY - 48,
+                width: railWidth,
+                height: 12
+            });
+
+            railInterval = 2500 + Math.random() * 1600;
+        }
+
+        function spawnBarrel() {
             const barrelHeight = 30 + Math.floor(Math.random() * 12);
 
-            obstacles.push({
-                x: gameWidth + 20,
+            barrels.push({
+                x: gameWidth + 35,
                 y: groundY - barrelHeight,
                 width: 26,
                 height: barrelHeight
             });
 
-            obstacleInterval = 950 + Math.random() * 700;
+            barrelInterval = 2600 + Math.random() * 2200;
+        }
+
+        function spawnScorePopup() {
+            const angle = Math.random() * Math.PI * 2;
+            const speed = 1.2 + Math.random() * 2.2;
+
+            scorePopups.push({
+                x: player.x + player.width / 2 + (Math.random() * 18 - 9),
+                y: player.y + player.height / 2 + (Math.random() * 16 - 8),
+                vx: Math.cos(angle) * speed,
+                vy: Math.sin(angle) * speed,
+                age: 0,
+                life: 650 + Math.random() * 250,
+                size: 13 + Math.random() * 4
+            });
+        }
+
+        function updateScorePopups(deltaTime) {
+            for (let i = scorePopups.length - 1; i >= 0; i--) {
+                const popup = scorePopups[i];
+
+                popup.age += deltaTime;
+                popup.x += popup.vx * (deltaTime / 16.67);
+                popup.y += popup.vy * (deltaTime / 16.67);
+                popup.vy += 0.018 * (deltaTime / 16.67);
+
+                if (popup.age >= popup.life) {
+                    scorePopups.splice(i, 1);
+                }
+            }
         }
 
         function updateGame(deltaTime) {
+            updateScorePopups(deltaTime);
+
             if (gameState !== "running") {
                 return;
             }
 
-            const speed = Math.min(5.4 + score / 450, 9);
+            const frameScale = deltaTime / 16.67;
+            const baseSpeed = 4.4;
+            const speed = Math.min(baseSpeed * getSpeedMultiplier(), 12.5);
 
-            score += deltaTime * 0.012;
-            scoreElement.textContent = String(Math.floor(score));
+            const previousBottom = player.y + player.height;
 
-            player.velocityY += player.gravity;
-            player.y += player.velocityY;
+            player.velocityY += player.gravity * frameScale;
+            player.y += player.velocityY * frameScale;
 
-            if (player.y >= groundY - player.height) {
+            pickupTimer += deltaTime;
+            railTimer += deltaTime;
+            barrelTimer += deltaTime;
+
+            if (pickupTimer >= pickupInterval) {
+                spawnWaxPickup();
+                pickupTimer = 0;
+            }
+
+            if (railTimer >= railInterval) {
+                spawnGrindRail();
+                railTimer = 0;
+            }
+
+            if (barrelTimer >= barrelInterval) {
+                spawnBarrel();
+                barrelTimer = 0;
+            }
+
+            for (let i = waxPickups.length - 1; i >= 0; i--) {
+                waxPickups[i].x -= speed * frameScale;
+
+                if (waxPickups[i].x + waxPickups[i].width < 0) {
+                    waxPickups.splice(i, 1);
+                }
+            }
+
+            for (let i = grindRails.length - 1; i >= 0; i--) {
+                grindRails[i].x -= speed * frameScale;
+
+                if (grindRails[i].x + grindRails[i].width < 0) {
+                    grindRails.splice(i, 1);
+                }
+            }
+
+            for (let i = barrels.length - 1; i >= 0; i--) {
+                barrels[i].x -= speed * frameScale;
+
+                if (barrels[i].x + barrels[i].width < 0) {
+                    barrels.splice(i, 1);
+                }
+            }
+
+            checkPickupCollisions();
+            checkRailGrinding(deltaTime, previousBottom);
+            checkBarrelCollisions();
+
+            if (gameState !== "running") {
+                updateWaxDisplay();
+                return;
+            }
+
+            if (!player.onRail && player.y >= groundY - player.height) {
                 player.y = groundY - player.height;
                 player.velocityY = 0;
                 player.grounded = true;
             }
 
-            obstacleTimer += deltaTime;
-
-            if (obstacleTimer >= obstacleInterval) {
-                spawnObstacle();
-                obstacleTimer = 0;
-            }
-
-            for (let i = obstacles.length - 1; i >= 0; i--) {
-                obstacles[i].x -= speed;
-
-                if (obstacles[i].x + obstacles[i].width < 0) {
-                    obstacles.splice(i, 1);
-                }
-            }
-
-            checkCollisions();
+            scoreElement.textContent = String(Math.floor(score));
+            updateLevelDisplay();
+            updateWaxDisplay();
         }
 
-        function checkCollisions() {
+        function checkPickupCollisions() {
             const playerHitbox = {
-                x: player.x + 8,
-                y: player.y + 8,
-                width: player.width - 12,
-                height: player.height - 12
+                x: player.x + 5,
+                y: player.y + 5,
+                width: player.width - 10,
+                height: player.height - 8
             };
 
-            for (const obstacle of obstacles) {
-                const obstacleHitbox = {
-                    x: obstacle.x + 3,
-                    y: obstacle.y + 3,
-                    width: obstacle.width - 6,
-                    height: obstacle.height - 3
+            for (let i = waxPickups.length - 1; i >= 0; i--) {
+                const pickup = waxPickups[i];
+
+                const pickupHitbox = {
+                    x: pickup.x + 5,
+                    y: pickup.y + 5,
+                    width: pickup.width - 10,
+                    height: pickup.height - 10
                 };
 
                 const collision =
-                    playerHitbox.x < obstacleHitbox.x + obstacleHitbox.width &&
-                    playerHitbox.x + playerHitbox.width > obstacleHitbox.x &&
-                    playerHitbox.y < obstacleHitbox.y + obstacleHitbox.height &&
-                    playerHitbox.y + playerHitbox.height > obstacleHitbox.y;
+                    playerHitbox.x < pickupHitbox.x + pickupHitbox.width &&
+                    playerHitbox.x + playerHitbox.width > pickupHitbox.x &&
+                    playerHitbox.y < pickupHitbox.y + pickupHitbox.height &&
+                    playerHitbox.y + playerHitbox.height > pickupHitbox.y;
 
                 if (collision) {
-                    endGame();
-                    break;
+                    wax = Math.min(MAX_WAX, wax + WAX_PICKUP_AMOUNT);
+                    waxPickups.splice(i, 1);
                 }
             }
         }
 
-        function endGame() {
+        function checkRailGrinding(deltaTime, previousBottom) {
+            isGrinding = false;
+            player.onRail = false;
+
+            const playerBottom = player.y + player.height;
+
+            for (const rail of grindRails) {
+                const railTop = rail.y;
+
+                const horizontalOverlap =
+                    player.x + player.width > rail.x + 6 &&
+                    player.x < rail.x + rail.width - 6;
+
+                const landingOnTop =
+                    horizontalOverlap &&
+                    player.velocityY >= 0 &&
+                    previousBottom <= railTop + 4 &&
+                    playerBottom >= railTop &&
+                    playerBottom <= railTop + 22;
+
+                if (landingOnTop) {
+                    player.y = railTop - player.height;
+                    player.velocityY = 0;
+                    player.grounded = true;
+                    player.onRail = true;
+                    isGrinding = true;
+
+                    wax -= WAX_DRAIN_RATE * (deltaTime / 1000);
+
+                    const previousScore = Math.floor(score);
+                    score += GRIND_SCORE_RATE * (deltaTime / 1000);
+                    const newScore = Math.floor(score);
+
+                    for (let point = previousScore + 1; point <= newScore; point++) {
+                        spawnScorePopup();
+                    }
+
+                    lastWholeScore = newScore;
+
+                    if (wax <= 0) {
+                        wax = 0;
+                        endGame("No Wax. No Grind.");
+                    }
+
+                    return;
+                }
+            }
+        }
+
+        function checkBarrelCollisions() {
+            const playerHitbox = {
+                x: player.x + 7,
+                y: player.y + 8,
+                width: player.width - 12,
+                height: player.height - 10
+            };
+
+            for (const barrel of barrels) {
+                const barrelHitbox = {
+                    x: barrel.x + 3,
+                    y: barrel.y + 3,
+                    width: barrel.width - 6,
+                    height: barrel.height - 3
+                };
+
+                const collision =
+                    playerHitbox.x < barrelHitbox.x + barrelHitbox.width &&
+                    playerHitbox.x + playerHitbox.width > barrelHitbox.x &&
+                    playerHitbox.y < barrelHitbox.y + barrelHitbox.height &&
+                    playerHitbox.y + playerHitbox.height > barrelHitbox.y;
+
+                if (collision) {
+                    endGame("You Hit A Barrel.");
+                    return;
+                }
+            }
+        }
+
+        function endGame(reason) {
             gameState = "gameover";
+            gameOverReason = reason;
             gameButton.textContent = "Restart";
 
             const finalScore = Math.floor(score);
+            scoreElement.textContent = finalScore;
 
             if (finalScore > bestScore) {
                 bestScore = finalScore;
-                localStorage.setItem("glitchWaxBarrelBestScore", String(bestScore));
+                localStorage.setItem("glitchWaxGrindBestScoreV3", String(bestScore));
                 bestElement.textContent = bestScore;
             }
         }
@@ -498,10 +810,12 @@
             ctx.fillStyle = gradient;
             ctx.fillRect(0, 0, gameWidth, gameHeight);
 
+            const gridOffset = gameState === "running" ? -(Date.now() / 28 * getSpeedMultiplier() % 32) : 0;
+
             ctx.strokeStyle = "rgba(255, 255, 255, 0.06)";
             ctx.lineWidth = 1;
 
-            for (let x = 0; x < gameWidth; x += 32) {
+            for (let x = gridOffset; x < gameWidth; x += 32) {
                 ctx.beginPath();
                 ctx.moveTo(x, 0);
                 ctx.lineTo(x, gameHeight);
@@ -536,12 +850,21 @@
 
             ctx.save();
 
-            ctx.strokeStyle = "#ffffff";
-            ctx.lineWidth = 4;
-            ctx.lineCap = "round";
+            if (isGrinding && gameState === "running") {
+                ctx.strokeStyle = "rgba(255, 255, 255, 0.85)";
+                ctx.lineWidth = 2;
+
+                for (let i = 0; i < 4; i++) {
+                    ctx.beginPath();
+                    ctx.moveTo(x + 3 + i * 8, y + player.height + 4);
+                    ctx.lineTo(x - 8 + i * 8, y + player.height + 15 + Math.random() * 4);
+                    ctx.stroke();
+                }
+            }
 
             ctx.strokeStyle = "#00f5ff";
             ctx.lineWidth = 5;
+            ctx.lineCap = "round";
             ctx.beginPath();
             ctx.moveTo(x - 8, y + player.height + 3);
             ctx.lineTo(x + player.width + 14, y + player.height);
@@ -556,7 +879,7 @@
             ctx.arc(x + player.width + 4, y + player.height + 6, 4, 0, Math.PI * 2);
             ctx.fill();
 
-            ctx.strokeStyle = "#ff2bd6";
+            ctx.strokeStyle = isGrinding ? "#00f5ff" : "#ff2bd6";
             ctx.lineWidth = 4;
 
             ctx.beginPath();
@@ -582,19 +905,120 @@
             ctx.restore();
         }
 
-        function drawBarrel(obstacle) {
+        function drawWaxPickup(pickup) {
+            ctx.save();
+
+            const bob = Math.sin(Date.now() / 160 + pickup.bobOffset) * 3;
+            const drawY = pickup.y + bob;
+
+            ctx.shadowColor = "rgba(0, 245, 255, 0.55)";
+            ctx.shadowBlur = 12;
+
+            if (waxImageLoaded) {
+                ctx.drawImage(waxImage, pickup.x, drawY, pickup.width, pickup.height);
+            } else {
+                ctx.fillStyle = "#ffffff";
+                ctx.fillRect(pickup.x, drawY, pickup.width, pickup.height);
+
+                ctx.fillStyle = "#050509";
+                ctx.font = "bold 12px Arial, Helvetica, sans-serif";
+                ctx.textAlign = "center";
+                ctx.fillText("WAX", pickup.x + pickup.width / 2, drawY + 25);
+            }
+
+            ctx.restore();
+        }
+
+        function drawGrindRail(rail) {
+            ctx.save();
+
+            ctx.fillStyle = "rgba(0, 245, 255, 0.12)";
+            ctx.fillRect(rail.x, rail.y - 4, rail.width, rail.height + 8);
+
+            ctx.strokeStyle = "#00f5ff";
+            ctx.lineWidth = 5;
+            ctx.lineCap = "round";
+
+            ctx.beginPath();
+            ctx.moveTo(rail.x, rail.y);
+            ctx.lineTo(rail.x + rail.width, rail.y);
+            ctx.stroke();
+
+            ctx.strokeStyle = "#ff2bd6";
+            ctx.lineWidth = 2;
+
+            ctx.beginPath();
+            ctx.moveTo(rail.x, rail.y + 8);
+            ctx.lineTo(rail.x + rail.width, rail.y + 8);
+            ctx.stroke();
+
+            ctx.strokeStyle = "rgba(255, 255, 255, 0.5)";
+            ctx.lineWidth = 2;
+
+            for (let x = rail.x + 22; x < rail.x + rail.width; x += 44) {
+                ctx.beginPath();
+                ctx.moveTo(x, rail.y + 6);
+                ctx.lineTo(x - 12, groundY + 8);
+                ctx.stroke();
+            }
+
+            ctx.restore();
+        }
+
+        function drawBarrel(barrel) {
             ctx.save();
 
             ctx.fillStyle = "#ff2bd6";
-            ctx.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
+            ctx.fillRect(barrel.x, barrel.y, barrel.width, barrel.height);
 
             ctx.fillStyle = "rgba(255, 255, 255, 0.22)";
-            ctx.fillRect(obstacle.x + 4, obstacle.y + 4, obstacle.width - 8, 5);
-            ctx.fillRect(obstacle.x + 4, obstacle.y + obstacle.height - 10, obstacle.width - 8, 5);
+            ctx.fillRect(barrel.x + 4, barrel.y + 4, barrel.width - 8, 5);
+            ctx.fillRect(barrel.x + 4, barrel.y + barrel.height - 10, barrel.width - 8, 5);
 
             ctx.strokeStyle = "#00f5ff";
             ctx.lineWidth = 2;
-            ctx.strokeRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
+            ctx.strokeRect(barrel.x, barrel.y, barrel.width, barrel.height);
+
+            ctx.restore();
+        }
+
+        function drawScorePopups() {
+            ctx.save();
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+
+            for (const popup of scorePopups) {
+                const alpha = 1 - (popup.age / popup.life);
+
+                ctx.globalAlpha = Math.max(0, alpha);
+                ctx.font = "bold " + popup.size + "px Arial, Helvetica, sans-serif";
+                ctx.lineWidth = 3;
+                ctx.strokeStyle = "rgba(5, 5, 10, 0.9)";
+                ctx.fillStyle = "#ffd84d";
+
+                ctx.strokeText("+1", popup.x, popup.y);
+                ctx.fillText("+1", popup.x, popup.y);
+            }
+
+            ctx.restore();
+        }
+
+        function drawWarnings() {
+            if (gameState !== "running") {
+                return;
+            }
+
+            ctx.save();
+            ctx.font = "bold 16px Arial, Helvetica, sans-serif";
+            ctx.textAlign = "center";
+
+            if (isGrinding) {
+                ctx.fillStyle = "#00f5ff";
+                ctx.fillText("Grinding: scoring points and using wax", gameWidth / 2, 30);
+            } else if (wax <= 20) {
+                ctx.fillStyle = "#ff2bd6";
+                ctx.fillText("Low wax. Skip rails or find a pack.", gameWidth / 2, 30);
+            }
 
             ctx.restore();
         }
@@ -605,7 +1029,7 @@
             }
 
             ctx.save();
-            ctx.fillStyle = "rgba(5, 5, 10, 0.68)";
+            ctx.fillStyle = "rgba(5, 5, 10, 0.7)";
             ctx.fillRect(0, 0, gameWidth, gameHeight);
 
             ctx.fillStyle = "#ffffff";
@@ -613,9 +1037,17 @@
             ctx.textAlign = "center";
 
             if (gameState === "ready") {
-                ctx.fillText("Press Space or Tap to Start", gameWidth / 2, 96);
+                ctx.fillText("Glitch Grind", gameWidth / 2, 60);
+
+                ctx.font = "16px Arial, Helvetica, sans-serif";
+                ctx.fillStyle = "#c7c7d1";
+                ctx.fillText("Land on rails to score.", gameWidth / 2, 92);
+                ctx.fillText("Jump barrels. Collect wax.", gameWidth / 2, 117);
+                ctx.fillText("Every 200 points increases speed by 15%.", gameWidth / 2, 142);
+                ctx.fillText("Press Space or Tap to Start.", gameWidth / 2, 167);
             } else if (gameState === "gameover") {
-                ctx.fillText("You Hit A Barrel", gameWidth / 2, 88);
+                ctx.fillText(gameOverReason, gameWidth / 2, 88);
+
                 ctx.font = "16px Arial, Helvetica, sans-serif";
                 ctx.fillStyle = "#c7c7d1";
                 ctx.fillText("Press Space, tap, or hit Restart to try again.", gameWidth / 2, 120);
@@ -626,12 +1058,22 @@
 
         function drawGame() {
             drawBackground();
-            drawPlayer();
 
-            for (const obstacle of obstacles) {
-                drawBarrel(obstacle);
+            for (const rail of grindRails) {
+                drawGrindRail(rail);
             }
 
+            for (const barrel of barrels) {
+                drawBarrel(barrel);
+            }
+
+            for (const pickup of waxPickups) {
+                drawWaxPickup(pickup);
+            }
+
+            drawPlayer();
+            drawScorePopups();
+            drawWarnings();
             drawMessage();
         }
 
@@ -640,7 +1082,7 @@
                 lastFrameTime = timestamp;
             }
 
-            const deltaTime = timestamp - lastFrameTime;
+            const deltaTime = Math.min(timestamp - lastFrameTime, 40);
             lastFrameTime = timestamp;
 
             updateGame(deltaTime);
