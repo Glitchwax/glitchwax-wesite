@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Glitch Wax | Coming Soon</title>
+    <title>Glitch Wax | Launching Soon</title>
     <style>
         :root {
             --bg-dark: #0b0b0f;
@@ -34,7 +34,7 @@
         }
 
         .lander {
-            max-width: 700px;
+            max-width: 760px;
             width: 100%;
             padding: 3rem 2rem;
             border: 1px solid rgba(255, 255, 255, 0.14);
@@ -66,10 +66,52 @@
 
         p {
             margin: 0 auto;
-            max-width: 540px;
+            max-width: 560px;
             color: var(--text-muted);
             font-size: 1.15rem;
             line-height: 1.6;
+        }
+
+        .launch-date {
+            margin-top: 1rem;
+            color: var(--text-main);
+            font-weight: 700;
+        }
+
+        .countdown {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            margin: 2.5rem auto 0;
+            max-width: 640px;
+        }
+
+        .countdown-item {
+            padding: 1.25rem 0.75rem;
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            border-radius: 18px;
+            background: rgba(255, 255, 255, 0.055);
+            box-shadow: inset 0 0 24px rgba(0, 245, 255, 0.04);
+        }
+
+        .countdown-number {
+            display: block;
+            font-size: clamp(2rem, 6vw, 3.25rem);
+            font-weight: 800;
+            line-height: 1;
+            color: var(--text-main);
+            text-shadow:
+                1.5px 0 var(--accent),
+                -1.5px 0 var(--accent-2);
+        }
+
+        .countdown-label {
+            display: block;
+            margin-top: 0.65rem;
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
         }
 
         .small {
@@ -77,22 +119,118 @@
             font-size: 0.95rem;
             opacity: 0.8;
         }
+
+        .hidden {
+            display: none;
+        }
+
+        @media (max-width: 620px) {
+            body {
+                padding: 1.25rem;
+            }
+
+            .lander {
+                padding: 2.25rem 1.25rem;
+            }
+
+            .countdown {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 0.75rem;
+            }
+
+            .countdown-item {
+                padding: 1rem 0.5rem;
+            }
+        }
     </style>
 </head>
 <body>
     <main class="lander">
         <img src="images/logo.png" alt="Glitch Wax logo" class="logo">
 
-        <h1 class="glitch">Coming Soon</h1>
+        <h1 class="glitch" id="main-heading">Launching Soon</h1>
 
         <p>
             Glitch Wax is getting ready to launch. Check back soon for board wax,
             product details, and ordering information.
         </p>
 
-        <p class="small">
+        <p class="launch-date">
+            Launching May 20th at 12:00 PM Central Time
+        </p>
+
+        <section class="countdown" aria-label="Countdown to Glitch Wax launch">
+            <div class="countdown-item">
+                <span class="countdown-number" id="days">00</span>
+                <span class="countdown-label">Days</span>
+            </div>
+
+            <div class="countdown-item">
+                <span class="countdown-number" id="hours">00</span>
+                <span class="countdown-label">Hours</span>
+            </div>
+
+            <div class="countdown-item">
+                <span class="countdown-number" id="minutes">00</span>
+                <span class="countdown-label">Minutes</span>
+            </div>
+
+            <div class="countdown-item">
+                <span class="countdown-number" id="seconds">00</span>
+                <span class="countdown-label">Seconds</span>
+            </div>
+        </section>
+
+        <p class="small" id="status-message">
             Quality board wax. Great value. No glitch in the system.
         </p>
     </main>
+
+    <script>
+        const launchDate = new Date("2026-05-20T12:00:00-05:00").getTime();
+
+        const daysElement = document.getElementById("days");
+        const hoursElement = document.getElementById("hours");
+        const minutesElement = document.getElementById("minutes");
+        const secondsElement = document.getElementById("seconds");
+        const headingElement = document.getElementById("main-heading");
+        const statusMessageElement = document.getElementById("status-message");
+
+        function formatNumber(number) {
+            return String(number).padStart(2, "0");
+        }
+
+        function updateCountdown() {
+            const now = new Date().getTime();
+            const timeRemaining = launchDate - now;
+
+            if (timeRemaining <= 0) {
+                daysElement.textContent = "00";
+                hoursElement.textContent = "00";
+                minutesElement.textContent = "00";
+                secondsElement.textContent = "00";
+
+                headingElement.textContent = "Launching Now";
+                statusMessageElement.textContent = "The countdown is complete. The full Glitch Wax site will be live shortly.";
+
+                clearInterval(countdownTimer);
+                return;
+            }
+
+            const days = Math.floor(timeRemaining / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((timeRemaining / (1000 * 60 * 60)) % 24);
+            const minutes = Math.floor((timeRemaining / (1000 * 60)) % 60);
+            const seconds = Math.floor((timeRemaining / 1000) % 60);
+
+            daysElement.textContent = formatNumber(days);
+            hoursElement.textContent = formatNumber(hours);
+            minutesElement.textContent = formatNumber(minutes);
+            secondsElement.textContent = formatNumber(seconds);
+        }
+
+        updateCountdown();
+
+        const countdownTimer = setInterval(updateCountdown, 1000);
+    </script>
 </body>
 </html>
