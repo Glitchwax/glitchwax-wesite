@@ -120,6 +120,79 @@
             opacity: 0.8;
         }
 
+        .game-section {
+            margin: 2.25rem auto 0;
+            max-width: 640px;
+            padding: 1.25rem;
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.045);
+        }
+
+        .game-heading {
+            margin: 0;
+            color: var(--text-main);
+            font-size: 1.1rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .game-instructions {
+            margin-top: 0.5rem;
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .game-stats {
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+            margin: 1rem 0 0.75rem;
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        .game-stats strong {
+            color: var(--text-main);
+        }
+
+        .game-canvas-wrap {
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            border-radius: 16px;
+            background:
+                linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                rgba(5, 5, 10, 0.72);
+            background-size: 24px 24px;
+        }
+
+        #skater-game {
+            display: block;
+            width: 100%;
+            height: auto;
+            cursor: pointer;
+            touch-action: manipulation;
+        }
+
+        .game-button {
+            margin-top: 1rem;
+            padding: 0.75rem 1.25rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 999px;
+            background: linear-gradient(90deg, var(--accent), var(--accent-2));
+            color: #050509;
+            font-weight: 800;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            cursor: pointer;
+        }
+
+        .game-button:hover {
+            filter: brightness(1.1);
+        }
+
         .hidden {
             display: none;
         }
@@ -140,6 +213,15 @@
 
             .countdown-item {
                 padding: 1rem 0.5rem;
+            }
+
+            .game-section {
+                padding: 1rem;
+            }
+
+            .game-stats {
+                gap: 1rem;
+                font-size: 0.85rem;
             }
         }
     </style>
@@ -179,6 +261,25 @@
                 <span class="countdown-number" id="seconds">00</span>
                 <span class="countdown-label">Seconds</span>
             </div>
+        </section>
+
+        <section class="game-section" aria-label="Skater barrel jump game">
+            <h2 class="game-heading">Kill Time. Jump Barrels.</h2>
+
+            <p class="game-instructions">
+                Press Space, click, or tap to jump. Avoid the barrels and keep the run alive.
+            </p>
+
+            <div class="game-stats">
+                <span>Score: <strong id="game-score">0</strong></span>
+                <span>Best: <strong id="game-best">0</strong></span>
+            </div>
+
+            <div class="game-canvas-wrap">
+                <canvas id="skater-game" width="640" height="220" aria-label="A small skater jumping over barrels"></canvas>
+            </div>
+
+            <button class="game-button" id="game-button" type="button">Start Game</button>
         </section>
 
         <p class="small" id="status-message">
@@ -228,9 +329,343 @@
             secondsElement.textContent = formatNumber(seconds);
         }
 
+        const countdownTimer = setInterval(updateCountdown, 1000);
         updateCountdown();
 
-        const countdownTimer = setInterval(updateCountdown, 1000);
+        const canvas = document.getElementById("skater-game");
+        const ctx = canvas.getContext("2d");
+        const scoreElement = document.getElementById("game-score");
+        const bestElement = document.getElementById("game-best");
+        const gameButton = document.getElementById("game-button");
+
+        const gameWidth = canvas.width;
+        const gameHeight = canvas.height;
+        const groundY = 172;
+
+        let gameState = "ready";
+        let lastFrameTime = 0;
+        let obstacleTimer = 0;
+        let obstacleInterval = 1200;
+        let score = 0;
+        let bestScore = Number(localStorage.getItem("glitchWaxBarrelBestScore") || 0);
+
+        const player = {
+            x: 72,
+            y: groundY - 46,
+            width: 36,
+            height: 46,
+            velocityY: 0,
+            gravity: 0.75,
+            jumpPower: -14,
+            grounded: true
+        };
+
+        let obstacles = [];
+
+        bestElement.textContent = bestScore;
+
+        function resetGame() {
+            gameState = "running";
+            player.y = groundY - player.height;
+            player.velocityY = 0;
+            player.grounded = true;
+            obstacles = [];
+            obstacleTimer = 0;
+            obstacleInterval = 1200;
+            score = 0;
+            scoreElement.textContent = "0";
+            gameButton.textContent = "Jump";
+        }
+
+        function jump() {
+            if (player.grounded) {
+                player.velocityY = player.jumpPower;
+                player.grounded = false;
+            }
+        }
+
+        function startOrJump() {
+            if (gameState === "ready" || gameState === "gameover") {
+                resetGame();
+                return;
+            }
+
+            if (gameState === "running") {
+                jump();
+            }
+        }
+
+        function spawnObstacle() {
+            const barrelHeight = 30 + Math.floor(Math.random() * 12);
+
+            obstacles.push({
+                x: gameWidth + 20,
+                y: groundY - barrelHeight,
+                width: 26,
+                height: barrelHeight
+            });
+
+            obstacleInterval = 950 + Math.random() * 700;
+        }
+
+        function updateGame(deltaTime) {
+            if (gameState !== "running") {
+                return;
+            }
+
+            const speed = Math.min(5.4 + score / 450, 9);
+
+            score += deltaTime * 0.012;
+            scoreElement.textContent = String(Math.floor(score));
+
+            player.velocityY += player.gravity;
+            player.y += player.velocityY;
+
+            if (player.y >= groundY - player.height) {
+                player.y = groundY - player.height;
+                player.velocityY = 0;
+                player.grounded = true;
+            }
+
+            obstacleTimer += deltaTime;
+
+            if (obstacleTimer >= obstacleInterval) {
+                spawnObstacle();
+                obstacleTimer = 0;
+            }
+
+            for (let i = obstacles.length - 1; i >= 0; i--) {
+                obstacles[i].x -= speed;
+
+                if (obstacles[i].x + obstacles[i].width < 0) {
+                    obstacles.splice(i, 1);
+                }
+            }
+
+            checkCollisions();
+        }
+
+        function checkCollisions() {
+            const playerHitbox = {
+                x: player.x + 8,
+                y: player.y + 8,
+                width: player.width - 12,
+                height: player.height - 12
+            };
+
+            for (const obstacle of obstacles) {
+                const obstacleHitbox = {
+                    x: obstacle.x + 3,
+                    y: obstacle.y + 3,
+                    width: obstacle.width - 6,
+                    height: obstacle.height - 3
+                };
+
+                const collision =
+                    playerHitbox.x < obstacleHitbox.x + obstacleHitbox.width &&
+                    playerHitbox.x + playerHitbox.width > obstacleHitbox.x &&
+                    playerHitbox.y < obstacleHitbox.y + obstacleHitbox.height &&
+                    playerHitbox.y + playerHitbox.height > obstacleHitbox.y;
+
+                if (collision) {
+                    endGame();
+                    break;
+                }
+            }
+        }
+
+        function endGame() {
+            gameState = "gameover";
+            gameButton.textContent = "Restart";
+
+            const finalScore = Math.floor(score);
+
+            if (finalScore > bestScore) {
+                bestScore = finalScore;
+                localStorage.setItem("glitchWaxBarrelBestScore", String(bestScore));
+                bestElement.textContent = bestScore;
+            }
+        }
+
+        function drawBackground() {
+            ctx.clearRect(0, 0, gameWidth, gameHeight);
+
+            const gradient = ctx.createLinearGradient(0, 0, gameWidth, gameHeight);
+            gradient.addColorStop(0, "rgba(255, 43, 214, 0.12)");
+            gradient.addColorStop(0.5, "rgba(5, 5, 10, 0.95)");
+            gradient.addColorStop(1, "rgba(0, 245, 255, 0.12)");
+
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, gameWidth, gameHeight);
+
+            ctx.strokeStyle = "rgba(255, 255, 255, 0.06)";
+            ctx.lineWidth = 1;
+
+            for (let x = 0; x < gameWidth; x += 32) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, gameHeight);
+                ctx.stroke();
+            }
+
+            for (let y = 0; y < gameHeight; y += 32) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(gameWidth, y);
+                ctx.stroke();
+            }
+
+            ctx.strokeStyle = "rgba(0, 245, 255, 0.7)";
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(0, groundY + 5);
+            ctx.lineTo(gameWidth, groundY + 5);
+            ctx.stroke();
+
+            ctx.strokeStyle = "rgba(255, 43, 214, 0.7)";
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(0, groundY + 10);
+            ctx.lineTo(gameWidth, groundY + 10);
+            ctx.stroke();
+        }
+
+        function drawPlayer() {
+            const x = player.x;
+            const y = player.y;
+
+            ctx.save();
+
+            ctx.strokeStyle = "#ffffff";
+            ctx.lineWidth = 4;
+            ctx.lineCap = "round";
+
+            ctx.strokeStyle = "#00f5ff";
+            ctx.lineWidth = 5;
+            ctx.beginPath();
+            ctx.moveTo(x - 8, y + player.height + 3);
+            ctx.lineTo(x + player.width + 14, y + player.height);
+            ctx.stroke();
+
+            ctx.fillStyle = "#ffffff";
+            ctx.beginPath();
+            ctx.arc(x + 4, y + player.height + 8, 4, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.beginPath();
+            ctx.arc(x + player.width + 4, y + player.height + 6, 4, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.strokeStyle = "#ff2bd6";
+            ctx.lineWidth = 4;
+
+            ctx.beginPath();
+            ctx.arc(x + 16, y + 8, 8, 0, Math.PI * 2);
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.moveTo(x + 16, y + 18);
+            ctx.lineTo(x + 20, y + 34);
+            ctx.lineTo(x + 29, y + 44);
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.moveTo(x + 20, y + 31);
+            ctx.lineTo(x + 9, y + 43);
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.moveTo(x + 18, y + 24);
+            ctx.lineTo(x + 31, y + 22);
+            ctx.stroke();
+
+            ctx.restore();
+        }
+
+        function drawBarrel(obstacle) {
+            ctx.save();
+
+            ctx.fillStyle = "#ff2bd6";
+            ctx.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
+
+            ctx.fillStyle = "rgba(255, 255, 255, 0.22)";
+            ctx.fillRect(obstacle.x + 4, obstacle.y + 4, obstacle.width - 8, 5);
+            ctx.fillRect(obstacle.x + 4, obstacle.y + obstacle.height - 10, obstacle.width - 8, 5);
+
+            ctx.strokeStyle = "#00f5ff";
+            ctx.lineWidth = 2;
+            ctx.strokeRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
+
+            ctx.restore();
+        }
+
+        function drawMessage() {
+            if (gameState === "running") {
+                return;
+            }
+
+            ctx.save();
+            ctx.fillStyle = "rgba(5, 5, 10, 0.68)";
+            ctx.fillRect(0, 0, gameWidth, gameHeight);
+
+            ctx.fillStyle = "#ffffff";
+            ctx.font = "bold 24px Arial, Helvetica, sans-serif";
+            ctx.textAlign = "center";
+
+            if (gameState === "ready") {
+                ctx.fillText("Press Space or Tap to Start", gameWidth / 2, 96);
+            } else if (gameState === "gameover") {
+                ctx.fillText("You Hit A Barrel", gameWidth / 2, 88);
+                ctx.font = "16px Arial, Helvetica, sans-serif";
+                ctx.fillStyle = "#c7c7d1";
+                ctx.fillText("Press Space, tap, or hit Restart to try again.", gameWidth / 2, 120);
+            }
+
+            ctx.restore();
+        }
+
+        function drawGame() {
+            drawBackground();
+            drawPlayer();
+
+            for (const obstacle of obstacles) {
+                drawBarrel(obstacle);
+            }
+
+            drawMessage();
+        }
+
+        function gameLoop(timestamp) {
+            if (!lastFrameTime) {
+                lastFrameTime = timestamp;
+            }
+
+            const deltaTime = timestamp - lastFrameTime;
+            lastFrameTime = timestamp;
+
+            updateGame(deltaTime);
+            drawGame();
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        window.addEventListener("keydown", function(event) {
+            if (event.code === "Space" || event.code === "ArrowUp") {
+                event.preventDefault();
+                startOrJump();
+            }
+        });
+
+        canvas.addEventListener("click", startOrJump);
+        gameButton.addEventListener("click", startOrJump);
+
+        canvas.addEventListener("touchstart", function(event) {
+            event.preventDefault();
+            startOrJump();
+        }, { passive: false });
+
+        drawGame();
+        requestAnimationFrame(gameLoop);
     </script>
 </body>
 </html>
