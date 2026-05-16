@@ -57,13 +57,21 @@ SQUARE THEN PROCESSES THE ORDER, VERIFIES PRICING, AND GENERATES A SECURE CHECK 
             <div class="order-card-description">
               <p>2.5 oz top-fill twist container</p>
               <p>Smooth, consistent glide</p>
-              <p>Available in black and white</p>
+              <p>Available in black and white cases</p>
               <p class="order-card-price">$8.50</p>
             </div>
 
             <div class="order-card-select">
-              <label for="stick-quantity">Quantity</label>
-              <select id="stick-quantity" class="quantity-select" data-price="8.50" data-product="Stick O Wax">
+              <label for="stick-white-quantity">White Case</label>
+              <select
+                id="stick-white-quantity"
+                class="quantity-select"
+                data-price="8.50"
+                data-product="Stick O Wax - White Case"
+                data-group="stick-o-wax"
+                data-group-label="Stick O Wax"
+                data-max-total="5"
+              >
                 <option value="0">0</option>
                 <option value="1">1</option>
                 <option value="2">2</option>
@@ -72,6 +80,30 @@ SQUARE THEN PROCESSES THE ORDER, VERIFIES PRICING, AND GENERATES A SECURE CHECK 
                 <option value="5">5</option>
               </select>
             </div>
+
+            <div class="order-card-select">
+              <label for="stick-black-quantity">Black Case</label>
+              <select
+                id="stick-black-quantity"
+                class="quantity-select"
+                data-price="8.50"
+                data-product="Stick O Wax - Black Case"
+                data-group="stick-o-wax"
+                data-group-label="Stick O Wax"
+                data-max-total="5"
+              >
+                <option value="0">0</option>
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+              </select>
+            </div>
+
+            <p class="summary-small">
+              Maximum 5 total Stick O Wax per order.
+            </p>
           </article>
 
           <article class="order-card">
@@ -88,13 +120,22 @@ SQUARE THEN PROCESSES THE ORDER, VERIFIES PRICING, AND GENERATES A SECURE CHECK 
             <div class="order-card-description">
               <p>Two 2.5 oz wax bars</p>
               <p>Long-lasting, durable formula</p>
+              <p>Available in white, blue/red, and yellow</p>
               <p>Includes free sticker</p>
               <p class="order-card-price">$10.00</p>
             </div>
 
             <div class="order-card-select">
-              <label for="two-pack-quantity">Quantity</label>
-              <select id="two-pack-quantity" class="quantity-select" data-price="10.00" data-product="2 Pack">
+              <label for="two-pack-white-quantity">White Wax</label>
+              <select
+                id="two-pack-white-quantity"
+                class="quantity-select"
+                data-price="10.00"
+                data-product="Two Pack - White Wax"
+                data-group="two-pack"
+                data-group-label="Two Pack"
+                data-max-total="5"
+              >
                 <option value="0">0</option>
                 <option value="1">1</option>
                 <option value="2">2</option>
@@ -103,6 +144,50 @@ SQUARE THEN PROCESSES THE ORDER, VERIFIES PRICING, AND GENERATES A SECURE CHECK 
                 <option value="5">5</option>
               </select>
             </div>
+
+            <div class="order-card-select">
+              <label for="two-pack-blue-red-quantity">Blue & Red Wax</label>
+              <select
+                id="two-pack-blue-red-quantity"
+                class="quantity-select"
+                data-price="10.00"
+                data-product="Two Pack - Blue & Red Wax"
+                data-group="two-pack"
+                data-group-label="Two Pack"
+                data-max-total="5"
+              >
+                <option value="0">0</option>
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+              </select>
+            </div>
+
+            <div class="order-card-select">
+              <label for="two-pack-yellow-quantity">Yellow Wax</label>
+              <select
+                id="two-pack-yellow-quantity"
+                class="quantity-select"
+                data-price="10.00"
+                data-product="Two Pack - Yellow Wax"
+                data-group="two-pack"
+                data-group-label="Two Pack"
+                data-max-total="5"
+              >
+                <option value="0">0</option>
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+              </select>
+            </div>
+
+            <p class="summary-small">
+              Maximum 5 total Two Packs per order.
+            </p>
           </article>
 
         </div>
@@ -145,16 +230,69 @@ SQUARE THEN PROCESSES THE ORDER, VERIFIES PRICING, AND GENERATES A SECURE CHECK 
   </footer>
 
   <script>
-    const quantitySelects = document.querySelectorAll('.quantity-select');
+    const quantitySelects = Array.from(document.querySelectorAll('.quantity-select'));
     const subtotalElement = document.getElementById('subtotal');
     const checkoutButton = document.getElementById('checkout-btn');
+
+    function getQuantity(select) {
+      return parseInt(select.value, 10) || 0;
+    }
+
+    function getGroupSelects(groupName) {
+      return quantitySelects.filter((select) => select.dataset.group === groupName);
+    }
+
+    function getGroupTotal(groupName) {
+      return getGroupSelects(groupName).reduce((total, select) => {
+        return total + getQuantity(select);
+      }, 0);
+    }
+
+    function updateQuantityLimits(changedSelect) {
+      const groupNames = new Set(quantitySelects.map((select) => select.dataset.group));
+
+      groupNames.forEach((groupName) => {
+        const groupSelects = getGroupSelects(groupName);
+
+        if (groupSelects.length === 0) {
+          return;
+        }
+
+        const maxTotal = parseInt(groupSelects[0].dataset.maxTotal, 10) || 5;
+        const groupLabel = groupSelects[0].dataset.groupLabel || 'this product';
+
+        let groupTotal = getGroupTotal(groupName);
+
+        if (changedSelect && changedSelect.dataset.group === groupName && groupTotal > maxTotal) {
+          const overflow = groupTotal - maxTotal;
+          const changedQuantity = getQuantity(changedSelect);
+          const correctedQuantity = Math.max(0, changedQuantity - overflow);
+
+          changedSelect.value = correctedQuantity.toString();
+          groupTotal = getGroupTotal(groupName);
+
+          alert('You can select up to ' + maxTotal + ' total ' + groupLabel + ' per order.');
+        }
+
+        groupSelects.forEach((select) => {
+          const currentQuantity = getQuantity(select);
+          const otherQuantity = groupTotal - currentQuantity;
+          const maxAllowedForThisSelect = maxTotal - otherQuantity;
+
+          Array.from(select.options).forEach((option) => {
+            const optionValue = parseInt(option.value, 10) || 0;
+            option.disabled = optionValue > maxAllowedForThisSelect;
+          });
+        });
+      });
+    }
 
     function updateSubtotal() {
       let subtotal = 0;
 
       quantitySelects.forEach((select) => {
         const price = parseFloat(select.dataset.price);
-        const quantity = parseInt(select.value, 10) || 0;
+        const quantity = getQuantity(select);
         subtotal += price * quantity;
       });
 
@@ -171,32 +309,55 @@ SQUARE THEN PROCESSES THE ORDER, VERIFIES PRICING, AND GENERATES A SECURE CHECK 
       const product = params.get('product');
 
       if (product === 'stick') {
-        const stickSelect = document.getElementById('stick-quantity');
-        if (stickSelect) {
-          stickSelect.value = '1';
+        const stickWhiteSelect = document.getElementById('stick-white-quantity');
+
+        if (stickWhiteSelect) {
+          stickWhiteSelect.value = '1';
         }
       }
 
       if (product === 'two-pack') {
-        const twoPackSelect = document.getElementById('two-pack-quantity');
-        if (twoPackSelect) {
-          twoPackSelect.value = '1';
+        const twoPackWhiteSelect = document.getElementById('two-pack-white-quantity');
+
+        if (twoPackWhiteSelect) {
+          twoPackWhiteSelect.value = '1';
         }
       }
 
+      updateQuantityLimits();
       updateSubtotal();
     }
 
     quantitySelects.forEach((select) => {
-      select.addEventListener('change', updateSubtotal);
+      select.addEventListener('change', function () {
+        updateQuantityLimits(select);
+        updateSubtotal();
+      });
     });
 
     checkoutButton.addEventListener('click', async () => {
-      const stickQty = parseInt(document.getElementById('stick-quantity').value, 10) || 0;
-      const twoPackQty = parseInt(document.getElementById('two-pack-quantity').value, 10) || 0;
+      const stickWhiteQty = getQuantity(document.getElementById('stick-white-quantity'));
+      const stickBlackQty = getQuantity(document.getElementById('stick-black-quantity'));
 
-      if (stickQty === 0 && twoPackQty === 0) {
+      const twoPackWhiteQty = getQuantity(document.getElementById('two-pack-white-quantity'));
+      const twoPackBlueRedQty = getQuantity(document.getElementById('two-pack-blue-red-quantity'));
+      const twoPackYellowQty = getQuantity(document.getElementById('two-pack-yellow-quantity'));
+
+      const stickTotal = stickWhiteQty + stickBlackQty;
+      const twoPackTotal = twoPackWhiteQty + twoPackBlueRedQty + twoPackYellowQty;
+
+      if (stickTotal === 0 && twoPackTotal === 0) {
         alert('Please select at least one product before continuing.');
+        return;
+      }
+
+      if (stickTotal > 5) {
+        alert('You can select up to 5 total Stick O Wax per order.');
+        return;
+      }
+
+      if (twoPackTotal > 5) {
+        alert('You can select up to 5 total Two Packs per order.');
         return;
       }
 
@@ -210,8 +371,11 @@ SQUARE THEN PROCESSES THE ORDER, VERIFIES PRICING, AND GENERATES A SECURE CHECK 
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({
-            stickOWaxQty: stickQty,
-            doublePackQty: twoPackQty
+            stickOWaxWhiteQty: stickWhiteQty,
+            stickOWaxBlackQty: stickBlackQty,
+            doublePackWhiteQty: twoPackWhiteQty,
+            doublePackBlueRedQty: twoPackBlueRedQty,
+            doublePackYellowQty: twoPackYellowQty
           })
         });
 
@@ -234,10 +398,12 @@ SQUARE THEN PROCESSES THE ORDER, VERIFIES PRICING, AND GENERATES A SECURE CHECK 
 
     window.addEventListener('pageshow', function () {
       resetCheckoutButton();
+      updateQuantityLimits();
       updateSubtotal();
     });
 
     applyPreselectedProduct();
+    updateQuantityLimits();
     updateSubtotal();
   </script>
 </body>

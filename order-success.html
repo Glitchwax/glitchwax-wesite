@@ -1,0 +1,107 @@
+<!--
+ORDER SUCCESS PAGE HTML
+THIS PAGE IS SHOWN AFTER A SUCCESSFUL SQUARE CHECKOUT REDIRECT.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Confirmed | Glitch Wax</title>
+    <meta name="description" content="Your Glitch Wax order has been confirmed.">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="glitch-overlay"></div>
+    <div class="background-logo"></div>
+
+    <header class="site-header">
+        <div class="container header-inner">
+            <a href="index.html" class="logo">
+                <img src="images/logo.png" alt="Glitch Wax logo" class="logo-image">
+            </a>
+
+            <nav class="site-nav">
+                <a href="index.html">Home</a>
+                <a href="store.html">Store</a>
+                <a href="contact.html">Contact</a>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <section class="order-success-hero">
+            <div class="container">
+                <div class="order-success-card">
+                    <p class="section-label">Order Confirmed</p>
+
+                    <h1>Thanks for your order.</h1>
+
+                    <p class="order-success-intro">
+                        Your Glitch Wax order went through successfully. You should receive an order confirmation shortly.
+                    </p>
+
+                    <p class="order-success-copy">
+                        If you have any questions about your order, contact Glitch Wax and include your order information.
+                    </p>
+
+                    <div class="order-success-details" id="orderDetails" hidden>
+                        <div class="order-success-detail-line">
+                            <span>Order ID</span>
+                            <strong id="orderId"></strong>
+                        </div>
+
+                        <div class="order-success-detail-line">
+                            <span>Transaction ID</span>
+                            <strong id="transactionId"></strong>
+                        </div>
+                    </div>
+
+                    <div class="order-success-actions">
+                        <a href="index.html" class="button button-primary">Back to Home</a>
+                        <a href="store.html" class="button button-secondary">Return to Store</a>
+                        <a href="contact.html" class="button button-secondary">Contact Us</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <div class="container footer-inner">
+            <p>&copy; 2026 Glitch Wax. All rights reserved.</p>
+            <div class="footer-links">
+                <a href="index.html">Home</a>
+                <a href="store.html">Store</a>
+                <a href="contact.html">Contact</a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        const params = new URLSearchParams(window.location.search);
+
+        const orderId =
+            params.get("orderId") ||
+            params.get("order_id") ||
+            params.get("order");
+
+        const transactionId =
+            params.get("transactionId") ||
+            params.get("transaction_id") ||
+            params.get("transaction");
+
+        const orderDetails = document.getElementById("orderDetails");
+        const orderIdElement = document.getElementById("orderId");
+        const transactionIdElement = document.getElementById("transactionId");
+
+        if (orderId || transactionId) {
+            orderDetails.hidden = false;
+            orderIdElement.textContent = orderId || "Not provided";
+            transactionIdElement.textContent = transactionId || "Not provided";
+        }
+    </script>
+
+    <script src="script.js"></script>
+</body>
+</html>

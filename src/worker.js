@@ -1,5 +1,9 @@
-const STICK_O_WAX_VARIATION_ID = "J4L4WTWW4JO7UTEHUYQVR7LZ";
-const DOUBLE_PACK_VARIATION_ID = "ZWBSYUZ6PGFILSV5S5BZ7BFG";
+const STICK_O_WAX_WHITE_VARIATION_ID = "J4L4WTWW4JO7UTEHUYQVR7LZ";
+const STICK_O_WAX_BLACK_VARIATION_ID = "RFCS5LTZIC5TPJLRQZJUSCJN";
+
+const DOUBLE_PACK_WHITE_VARIATION_ID = "ZWBSYUZ6PGFILSV5S5BZ7BFG";
+const DOUBLE_PACK_BLUE_RED_VARIATION_ID = "3BC6J4JGF7YPNFI5X7M7M3VT";
+const DOUBLE_PACK_YELLOW_VARIATION_ID = "25BFW2NOMJ3OCMXQNPCBTBM6";
 
 export default {
   async fetch(request, env) {
@@ -257,45 +261,60 @@ async function handleCreateCheckout(request, env) {
   try {
     const body = await request.json();
 
-    const stickOWaxQty = Number(body.stickOWaxQty || 0);
-    const doublePackQty = Number(body.doublePackQty || 0);
+    const stickOWaxWhiteQty = getValidQuantity(body.stickOWaxWhiteQty);
+    const stickOWaxBlackQty = getValidQuantity(body.stickOWaxBlackQty);
 
-    if (
-      !Number.isInteger(stickOWaxQty) ||
-      !Number.isInteger(doublePackQty) ||
-      stickOWaxQty < 0 ||
-      doublePackQty < 0 ||
-      stickOWaxQty > 20 ||
-      doublePackQty > 20
-    ) {
+    const doublePackWhiteQty = getValidQuantity(body.doublePackWhiteQty);
+    const doublePackBlueRedQty = getValidQuantity(body.doublePackBlueRedQty);
+    const doublePackYellowQty = getValidQuantity(body.doublePackYellowQty);
+
+    const quantities = [
+      stickOWaxWhiteQty,
+      stickOWaxBlackQty,
+      doublePackWhiteQty,
+      doublePackBlueRedQty,
+      doublePackYellowQty
+    ];
+
+    if (quantities.some((quantity) => quantity === null)) {
       return Response.json(
         { error: "Please select a valid quantity." },
         { status: 400 }
       );
     }
 
-    if (stickOWaxQty === 0 && doublePackQty === 0) {
+    const stickOWaxTotal = stickOWaxWhiteQty + stickOWaxBlackQty;
+    const doublePackTotal = doublePackWhiteQty + doublePackBlueRedQty + doublePackYellowQty;
+
+    if (stickOWaxTotal === 0 && doublePackTotal === 0) {
       return Response.json(
         { error: "Your cart is empty." },
         { status: 400 }
       );
     }
 
+    if (stickOWaxTotal > 5) {
+      return Response.json(
+        { error: "You can select up to 5 total Stick O Wax per order." },
+        { status: 400 }
+      );
+    }
+
+    if (doublePackTotal > 5) {
+      return Response.json(
+        { error: "You can select up to 5 total Two Packs per order." },
+        { status: 400 }
+      );
+    }
+
     const lineItems = [];
 
-    if (stickOWaxQty > 0) {
-      lineItems.push({
-        catalog_object_id: STICK_O_WAX_VARIATION_ID,
-        quantity: String(stickOWaxQty)
-      });
-    }
+    addLineItem(lineItems, STICK_O_WAX_WHITE_VARIATION_ID, stickOWaxWhiteQty);
+    addLineItem(lineItems, STICK_O_WAX_BLACK_VARIATION_ID, stickOWaxBlackQty);
 
-    if (doublePackQty > 0) {
-      lineItems.push({
-        catalog_object_id: DOUBLE_PACK_VARIATION_ID,
-        quantity: String(doublePackQty)
-      });
-    }
+    addLineItem(lineItems, DOUBLE_PACK_WHITE_VARIATION_ID, doublePackWhiteQty);
+    addLineItem(lineItems, DOUBLE_PACK_BLUE_RED_VARIATION_ID, doublePackBlueRedQty);
+    addLineItem(lineItems, DOUBLE_PACK_YELLOW_VARIATION_ID, doublePackYellowQty);
 
     const squareBaseUrl =
       env.SQUARE_ENVIRONMENT === "production"
@@ -374,5 +393,28 @@ async function handleCreateCheckout(request, env) {
       { error: "Checkout could not be created. Please try again." },
       { status: 500 }
     );
+  }
+}
+
+function getValidQuantity(value) {
+  const quantity = Number(value || 0);
+
+  if (!Number.isInteger(quantity)) {
+    return null;
+  }
+
+  if (quantity < 0 || quantity > 5) {
+    return null;
+  }
+
+  return quantity;
+}
+
+function addLineItem(lineItems, catalogObjectId, quantity) {
+  if (quantity > 0) {
+    lineItems.push({
+      catalog_object_id: catalogObjectId,
+      quantity: String(quantity)
+    });
   }
 }
