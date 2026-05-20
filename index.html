@@ -1,1113 +1,237 @@
+<!--
+HOME PAGE HTML
+THIS PAGE IS THE MAIN HOME PAGE. IT SHOWS VARIOUS PICTURES OF THE PRODUCT, AS WELL AS USE CASES
+IT ALSO BREAKS DOWN THE ABSTRACT SPECIFICS OF THE COMPANY, INCLUDING WHAT THEY DO AND THE POINT OF USING BOARD WAX
+-->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Glitch Wax | Launching Soon</title>
-    <style>
-        :root {
-            --bg-dark: #0b0b0f;
-            --text-main: #ffffff;
-            --text-muted: #c7c7d1;
-            --accent: #ff2bd6;
-            --accent-2: #00f5ff;
-        }
-
-        * {
-            box-sizing: border-box;
-        }
-
-        body {
-            margin: 0;
-            min-height: 100vh;
-            font-family: Arial, Helvetica, sans-serif;
-            background:
-                radial-gradient(circle at top left, rgba(255, 43, 214, 0.18), transparent 35%),
-                radial-gradient(circle at bottom right, rgba(0, 245, 255, 0.16), transparent 35%),
-                var(--bg-dark);
-            color: var(--text-main);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 2rem;
-            text-align: center;
-        }
-
-        .lander {
-            max-width: 760px;
-            width: 100%;
-            padding: 3rem 2rem;
-            border: 1px solid rgba(255, 255, 255, 0.14);
-            border-radius: 24px;
-            background: rgba(10, 10, 16, 0.72);
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
-            backdrop-filter: blur(10px);
-        }
-
-        .logo {
-            max-width: 220px;
-            width: 70%;
-            height: auto;
-            margin-bottom: 2rem;
-        }
-
-        h1 {
-            margin: 0 0 1rem;
-            font-size: clamp(2.2rem, 7vw, 4.5rem);
-            letter-spacing: 0.04em;
-            text-transform: uppercase;
-        }
-
-        .glitch {
-            text-shadow:
-                2px 0 var(--accent),
-                -2px 0 var(--accent-2);
-        }
-
-        p {
-            margin: 0 auto;
-            max-width: 560px;
-            color: var(--text-muted);
-            font-size: 1.15rem;
-            line-height: 1.6;
-        }
-
-        .launch-date {
-            margin-top: 1rem;
-            color: var(--text-main);
-            font-weight: 700;
-        }
-
-        .countdown {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 1rem;
-            margin: 2.5rem auto 0;
-            max-width: 640px;
-        }
-
-        .countdown-item {
-            padding: 1.25rem 0.75rem;
-            border: 1px solid rgba(255, 255, 255, 0.14);
-            border-radius: 18px;
-            background: rgba(255, 255, 255, 0.055);
-            box-shadow: inset 0 0 24px rgba(0, 245, 255, 0.04);
-        }
-
-        .countdown-number {
-            display: block;
-            font-size: clamp(2rem, 6vw, 3.25rem);
-            font-weight: 800;
-            line-height: 1;
-            color: var(--text-main);
-            text-shadow:
-                1.5px 0 var(--accent),
-                -1.5px 0 var(--accent-2);
-        }
-
-        .countdown-label {
-            display: block;
-            margin-top: 0.65rem;
-            color: var(--text-muted);
-            font-size: 0.8rem;
-            letter-spacing: 0.12em;
-            text-transform: uppercase;
-        }
-
-        .small {
-            margin-top: 2rem;
-            font-size: 0.95rem;
-            opacity: 0.8;
-        }
-
-        .game-section {
-            margin: 2.25rem auto 0;
-            max-width: 640px;
-            padding: 1.25rem;
-            border: 1px solid rgba(255, 255, 255, 0.14);
-            border-radius: 20px;
-            background: rgba(255, 255, 255, 0.045);
-        }
-
-        .game-heading {
-            margin: 0;
-            color: var(--text-main);
-            font-size: 1.1rem;
-            letter-spacing: 0.08em;
-            text-transform: uppercase;
-        }
-
-        .game-instructions {
-            margin-top: 0.5rem;
-            font-size: 0.95rem;
-            line-height: 1.5;
-        }
-
-        .game-stats {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 1rem 1.5rem;
-            margin: 1rem 0 0.75rem;
-            color: var(--text-muted);
-            font-size: 0.95rem;
-        }
-
-        .game-stats strong {
-            color: var(--text-main);
-        }
-
-        .wax-meter-wrap {
-            max-width: 420px;
-            margin: 0 auto 0.9rem;
-            text-align: left;
-        }
-
-        .wax-meter-label {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 0.35rem;
-            color: var(--text-muted);
-            font-size: 0.82rem;
-            letter-spacing: 0.08em;
-            text-transform: uppercase;
-        }
-
-        .wax-meter {
-            height: 14px;
-            overflow: hidden;
-            border: 1px solid rgba(255, 255, 255, 0.18);
-            border-radius: 999px;
-            background: rgba(255, 255, 255, 0.07);
-        }
-
-        .wax-meter-fill {
-            width: 50%;
-            height: 100%;
-            border-radius: 999px;
-            background: linear-gradient(90deg, var(--accent), var(--accent-2));
-            transition: width 0.12s linear;
-        }
-
-        .game-canvas-wrap {
-            position: relative;
-            overflow: hidden;
-            border: 1px solid rgba(255, 255, 255, 0.14);
-            border-radius: 16px;
-            background:
-                linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-                rgba(5, 5, 10, 0.72);
-            background-size: 24px 24px;
-        }
-
-        #skater-game {
-            display: block;
-            width: 100%;
-            height: auto;
-            cursor: pointer;
-            touch-action: manipulation;
-        }
-
-        .game-button {
-            margin-top: 1rem;
-            padding: 0.75rem 1.25rem;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 999px;
-            background: linear-gradient(90deg, var(--accent), var(--accent-2));
-            color: #050509;
-            font-weight: 800;
-            letter-spacing: 0.06em;
-            text-transform: uppercase;
-            cursor: pointer;
-        }
-
-        .game-button:hover {
-            filter: brightness(1.1);
-        }
-
-        @media (max-width: 620px) {
-            body {
-                padding: 1.25rem;
-            }
-
-            .lander {
-                padding: 2.25rem 1.25rem;
-            }
-
-            .countdown {
-                grid-template-columns: repeat(2, 1fr);
-                gap: 0.75rem;
-            }
-
-            .countdown-item {
-                padding: 1rem 0.5rem;
-            }
-
-            .game-section {
-                padding: 1rem;
-            }
-
-            .game-stats {
-                gap: 0.75rem 1rem;
-                font-size: 0.85rem;
-            }
-        }
-    </style>
+    <title>Glitch Wax | Board Wax for Skate, Snow, and More</title>
+    <meta name="description" content="Glitch Wax makes board wax for skateboarding, snowboarding, longboarding, and more. Shop online and learn what makes the difference.">
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <main class="lander">
-        <img src="images/logo.png" alt="Glitch Wax logo" class="logo">
+    <div id="glitch-overlay"></div>
+    <div class="background-logo"></div>
 
-        <h1 class="glitch" id="main-heading">Launching Soon</h1>
+    <header class="site-header">
+        <div class="container header-inner">
+            <a href="index.html" class="logo">
+                <img src="images/logo.png" alt="Glitch Wax logo" class="logo-image">
+            </a>
 
-        <p>
-            Glitch Wax is getting ready to launch. Check back soon for board wax,
-            product details, and ordering information.
-        </p>
+            <nav class="site-nav">
+                <a href="index.html">Home</a>
+                <a href="store.html">Store</a>
+                <a href="contact.html">Contact</a>
+            </nav>
+        </div>
+    </header>
 
-        <p class="launch-date">
-            Launching May 20th at 12:00 PM Central Time
-        </p>
+    <main>
+        <section class="hero hero-glitch-target">
+            <div class="hero-glitch-layer hero-glitch-base">
+                <div class="container hero-grid">
+                    <div class="hero-text">
+                        <p class="eyebrow">For Skaters, By Skaters</p>
+                        <h1>Hand Made Skate Wax, Made With Value, Care, and Love</h1>
+                        <p class="hero-description">
+                            We glitched the system with Glitch Wax. We curated it for skaters to learn and progress within the world of skating.
+                            We set out to make wax we’d actually buy—at a price that made sense.
+                            We sell skate wax that has been developed and crafted at home for skaters, by skaters.
+                            
+                        </p>
 
-        <section class="countdown" aria-label="Countdown to Glitch Wax launch">
-            <div class="countdown-item">
-                <span class="countdown-number" id="days">00</span>
-                <span class="countdown-label">Days</span>
-            </div>
+                        <div class="hero-buttons">
+                            <a href="store.html" class="button button-primary">Shop Now</a>
+                            <a href="#about-wax" class="button button-secondary">Learn More</a>
+                        </div>
+                    </div>
 
-            <div class="countdown-item">
-                <span class="countdown-number" id="hours">00</span>
-                <span class="countdown-label">Hours</span>
-            </div>
-
-            <div class="countdown-item">
-                <span class="countdown-number" id="minutes">00</span>
-                <span class="countdown-label">Minutes</span>
-            </div>
-
-            <div class="countdown-item">
-                <span class="countdown-number" id="seconds">00</span>
-                <span class="countdown-label">Seconds</span>
-            </div>
-        </section>
-
-        <section class="game-section" aria-label="Glitch Grind skate wax game">
-            <h2 class="game-heading">Glitch Grind</h2>
-
-            <p class="game-instructions">
-                Jump for wax. Jump over barrels. Land on rails to grind for points.
-                Every 200 points, the game gets faster.
-            </p>
-
-            <div class="game-stats">
-                <span>Score: <strong id="game-score">0</strong></span>
-                <span>Best: <strong id="game-best">0</strong></span>
-                <span>Level: <strong id="game-level">1</strong></span>
-            </div>
-
-            <div class="wax-meter-wrap" aria-label="Wax inventory meter">
-                <div class="wax-meter-label">
-                    <span>Wax Inventory</span>
-                    <span id="wax-value">50%</span>
-                </div>
-
-                <div class="wax-meter">
-                    <div class="wax-meter-fill" id="wax-fill"></div>
+                    <div class="hero-media">
+                        <img src="images/hero.jpg" alt="Skateboard action shot">
+                    </div>
                 </div>
             </div>
 
-            <div class="game-canvas-wrap">
-                <canvas id="skater-game" width="640" height="220" aria-label="A small skater collecting wax, grinding rails, and jumping barrels"></canvas>
+            <div class="hero-glitch-layer hero-glitch-red" aria-hidden="true">
+                <div class="container hero-grid">
+                    <div class="hero-text">
+                        <p class="eyebrow">Wax Up. Ride Better.</p>
+                        <h1>Board wax made for grip, feel, and control.</h1>
+                        <p class="hero-description">
+                            Glitch Wax helps riders get better traction and better board feel,
+                            whether you are skating, snowboarding, longboarding, or just looking
+                            for a cleaner setup that works.
+                        </p>
+
+                        <div class="hero-buttons">
+                            <a href="store.html" class="button button-primary" tabindex="-1">Shop Now</a>
+                            <a href="#about-wax" class="button button-secondary" tabindex="-1">Learn More</a>
+                        </div>
+                    </div>
+
+                    <div class="hero-media">
+                        <img src="images/hero.jpg" alt="">
+                    </div>
+                </div>
             </div>
 
-            <button class="game-button" id="game-button" type="button">Start Game</button>
+            <div class="hero-glitch-layer hero-glitch-cyan" aria-hidden="true">
+                <div class="container hero-grid">
+                    <div class="hero-text">
+                        <p class="eyebrow">Wax Up. Ride Better.</p>
+                        <h1>Board wax made for grip, feel, and control.</h1>
+                        <p class="hero-description">
+                            Glitch Wax helps riders get better traction and better board feel,
+                            whether you are skating, snowboarding, longboarding, or just looking
+                            for a cleaner setup that works.
+                        </p>
+
+                        <div class="hero-buttons">
+                            <a href="store.html" class="button button-primary" tabindex="-1">Shop Now</a>
+                            <a href="#about-wax" class="button button-secondary" tabindex="-1">Learn More</a>
+                        </div>
+                    </div>
+
+                    <div class="hero-media">
+                        <img src="images/hero.jpg" alt="">
+                    </div>
+                </div>
+            </div>
+
+            <div class="hero-glitch-scan" aria-hidden="true"></div>
         </section>
 
-        <p class="small" id="status-message">
-            Quality board wax. Great value. No glitch in the system.
-        </p>
+        <section class="info-section" id="about-wax">
+            <div class="container narrow">
+                <p class="section-label">What is board wax?</p>
+                <h2>Skate Wax Was Created To Make Obstacles Grindable</h2>
+                <p>
+                    Board wax is used to enhance slides and grinds, allowing for a more smooth grind and a longer distance.
+                    Applied on the bottom of a board or on the obstacle itself, board wax is an easy way to enhance your experience.
+                    Skate wax allows even the most inexperienced rider to feel more engaged in the sport.
+                </p>
+            </div>
+        </section>
+
+<section class="feature-section">
+    <div class="container feature-layout">
+        <div class="feature-video-column">
+            <div class="feature-video-card">
+                <video
+                    class="feature-video"
+                    muted
+                    loop
+                    playsinline
+                    preload="metadata"
+                    data-autoplay-once
+                >
+                    <source src="images/why-glitch-wax.mp4" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>
+            </div>
+        </div>
+
+        <div class="product-description">
+            <p class="section-label">Why Glitch Wax?</p>
+            <h2>A Simple Container With An Advanced Product</h2>
+
+            <div class="product-description-copy">
+                <p>Glitch Wax is a focused brand, offering only two products:</p>
+
+                <p><strong>The Stick o Wax</strong>, a deodorant style wax made to be discreet and portable</p>
+
+                <p><strong>The Two Pack</strong>, two disks of traditional wax, crafted nontraditionally</p>
+
+                <p>
+                    Both products were crafted with a recipe that combines temperature resistance.
+                    Less frozen wax in the cold. Less melted wax in the heat.
+                </p>
+            </div>
+
+            <div class="feature-points">
+                <div class="feature-point">
+                    <h3>Value</h3>
+                    <p>Glitch Wax is a home crafted, hand made product, at a price <i>we</i> would pay</p>
+                </div>
+
+                <div class="feature-point">
+                    <h3>Application</h3>
+                    <p>Glitch Wax is easy to transport, easy to apply, and <i>dangerous</i> to ride</p>
+                </div>
+
+                <div class="feature-point">
+                    <h3>Community</h3>
+                    <p>Designed, tested, and used by <i>passionate</i> riders, Glitch Wax is For Skaters, By Skaters</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+        <section class="products-preview">
+            <div class="container">
+                <div class="section-heading">
+                    <p class="section-label">Our Products</p>
+                    <h2>Stick With The Traditional Or Leave The Pack Behind</h2>
+                </div>
+
+                <div class="product-grid">
+                    <article class="product-card">
+                        <img src="images/product-double.jpg" alt="Double pack wax">
+                        <h3>Two Pack</h3>
+                        <p class="price">$10.00</p>
+                        <p>
+                            For skaters who want more wax for more occasions, the Two Pack is still our premium wax
+                        </p>
+                        <a href="product-double.html" class="button button-primary">View Product</a>
+                    </article>
+
+                    <article class="product-card">
+                        <img src="images/product-single.jpg" alt="Single stick wax">
+                        <h3>Stick o Wax</h3>
+                        <p class="price">$8.50</p>
+                        <p>
+                            A smartly packaged, and easily portable option, the Stick o Wax holds 2.5oz of our premium wax
+                        </p>
+                        <a href="product-single.html" class="button button-primary">View Product</a>
+                    </article>                    
+                </div>
+            </div>
+        </section>
+
+        <section class="cta-section">
+            <div class="container narrow cta-box">
+                <p class="section-label">Ready to Ride?</p>
+                <h2>Check out the store and grab your wax.</h2>
+                <p>
+                    Browse the current Glitch Wax options and choose the product that works best for you.
+                </p>
+                <a href="store.html" class="button button-primary">Go to Store</a>
+            </div>
+        </section>
     </main>
 
-    <script>
-        const launchDate = new Date("2026-05-20T12:00:00-05:00").getTime();
-
-        const daysElement = document.getElementById("days");
-        const hoursElement = document.getElementById("hours");
-        const minutesElement = document.getElementById("minutes");
-        const secondsElement = document.getElementById("seconds");
-        const headingElement = document.getElementById("main-heading");
-        const statusMessageElement = document.getElementById("status-message");
-
-        function formatNumber(number) {
-            return String(number).padStart(2, "0");
-        }
-
-        function updateCountdown() {
-            const now = new Date().getTime();
-            const timeRemaining = launchDate - now;
-
-            if (timeRemaining <= 0) {
-                daysElement.textContent = "00";
-                hoursElement.textContent = "00";
-                minutesElement.textContent = "00";
-                secondsElement.textContent = "00";
-
-                headingElement.textContent = "Launching Now";
-                statusMessageElement.textContent = "The countdown is complete. The full Glitch Wax site will be live shortly.";
-
-                clearInterval(countdownTimer);
-                return;
-            }
-
-            const days = Math.floor(timeRemaining / (1000 * 60 * 60 * 24));
-            const hours = Math.floor((timeRemaining / (1000 * 60 * 60)) % 24);
-            const minutes = Math.floor((timeRemaining / (1000 * 60)) % 60);
-            const seconds = Math.floor((timeRemaining / 1000) % 60);
-
-            daysElement.textContent = formatNumber(days);
-            hoursElement.textContent = formatNumber(hours);
-            minutesElement.textContent = formatNumber(minutes);
-            secondsElement.textContent = formatNumber(seconds);
-        }
-
-        const countdownTimer = setInterval(updateCountdown, 1000);
-        updateCountdown();
-
-        const canvas = document.getElementById("skater-game");
-        const ctx = canvas.getContext("2d");
-        const scoreElement = document.getElementById("game-score");
-        const bestElement = document.getElementById("game-best");
-        const levelElement = document.getElementById("game-level");
-        const waxFillElement = document.getElementById("wax-fill");
-        const waxValueElement = document.getElementById("wax-value");
-        const gameButton = document.getElementById("game-button");
-
-        const gameWidth = canvas.width;
-        const gameHeight = canvas.height;
-        const groundY = 172;
-
-        const MAX_WAX = 100;
-        const STARTING_WAX = 50;
-        const WAX_PICKUP_AMOUNT = 25;
-        const WAX_DRAIN_RATE = 15;
-        const GRIND_SCORE_RATE = 75;
-        const POINTS_PER_LEVEL = 200;
-        const SPEED_INCREASE_PER_LEVEL = 0.15;
-
-        const waxImage = new Image();
-        let waxImageLoaded = false;
-
-        waxImage.onload = function() {
-            waxImageLoaded = true;
-        };
-
-        waxImage.src = "images/game-wax.png";
-
-        let gameState = "ready";
-        let lastFrameTime = 0;
-        let score = 0;
-        let lastWholeScore = 0;
-        let bestScore = Number(localStorage.getItem("glitchWaxGrindBestScoreV3") || 0);
-        let wax = STARTING_WAX;
-        let gameOverReason = "";
-        let isGrinding = false;
-
-        let pickupTimer = 0;
-        let pickupInterval = 4500;
-        let railTimer = 0;
-        let railInterval = 2200;
-        let barrelTimer = 0;
-        let barrelInterval = 3000;
-
-        const player = {
-            x: 72,
-            y: groundY - 46,
-            width: 36,
-            height: 46,
-            velocityY: 0,
-            gravity: 0.75,
-            jumpPower: -14,
-            grounded: true,
-            onRail: false
-        };
-
-        let waxPickups = [];
-        let grindRails = [];
-        let barrels = [];
-        let scorePopups = [];
-
-        bestElement.textContent = bestScore;
-        updateWaxDisplay();
-        updateLevelDisplay();
-
-        function getCompletedLevels() {
-            return Math.floor(score / POINTS_PER_LEVEL);
-        }
-
-        function getDisplayLevel() {
-            return getCompletedLevels() + 1;
-        }
-
-        function getSpeedMultiplier() {
-            return 1 + (getCompletedLevels() * SPEED_INCREASE_PER_LEVEL);
-        }
-
-        function updateLevelDisplay() {
-            levelElement.textContent = getDisplayLevel();
-        }
-
-        function updateWaxDisplay() {
-            const roundedWax = Math.max(0, Math.round(wax));
-
-            waxFillElement.style.width = roundedWax + "%";
-            waxValueElement.textContent = roundedWax + "%";
-        }
-
-        function resetGame() {
-            gameState = "running";
-            gameOverReason = "";
-            isGrinding = false;
-
-            player.y = groundY - player.height;
-            player.velocityY = 0;
-            player.grounded = true;
-            player.onRail = false;
-
-            waxPickups = [];
-            grindRails = [];
-            barrels = [];
-            scorePopups = [];
-
-            pickupTimer = 0;
-            pickupInterval = 4200;
-            railTimer = 0;
-            railInterval = 1800;
-            barrelTimer = 0;
-            barrelInterval = 2600;
-
-            score = 0;
-            lastWholeScore = 0;
-            wax = STARTING_WAX;
-
-            scoreElement.textContent = "0";
-            levelElement.textContent = "1";
-            gameButton.textContent = "Jump";
-
-            updateWaxDisplay();
-        }
-
-        function jump() {
-            if (player.grounded) {
-                player.velocityY = player.jumpPower;
-                player.grounded = false;
-                player.onRail = false;
-            }
-        }
-
-        function startOrJump() {
-            if (gameState === "ready" || gameState === "gameover") {
-                resetGame();
-                return;
-            }
-
-            if (gameState === "running") {
-                jump();
-            }
-        }
-
-        function spawnWaxPickup() {
-            if (waxPickups.length > 0) {
-                return;
-            }
-
-            const possibleYPositions = [
-                groundY - 116,
-                groundY - 104,
-                groundY - 92
-            ];
-
-            const y = possibleYPositions[Math.floor(Math.random() * possibleYPositions.length)];
-
-            waxPickups.push({
-                x: gameWidth + 30,
-                y: y,
-                width: 38,
-                height: 38,
-                bobOffset: Math.random() * Math.PI * 2
-            });
-
-            pickupInterval = 4500 + Math.random() * 2500;
-        }
-
-        function spawnGrindRail() {
-            const railWidth = 150 + Math.random() * 130;
-
-            grindRails.push({
-                x: gameWidth + 30,
-                y: groundY - 48,
-                width: railWidth,
-                height: 12
-            });
-
-            railInterval = 2500 + Math.random() * 1600;
-        }
-
-        function spawnBarrel() {
-            const barrelHeight = 30 + Math.floor(Math.random() * 12);
-
-            barrels.push({
-                x: gameWidth + 35,
-                y: groundY - barrelHeight,
-                width: 26,
-                height: barrelHeight
-            });
-
-            barrelInterval = 2600 + Math.random() * 2200;
-        }
-
-        function spawnScorePopup() {
-            const angle = Math.random() * Math.PI * 2;
-            const speed = 1.2 + Math.random() * 2.2;
-
-            scorePopups.push({
-                x: player.x + player.width / 2 + (Math.random() * 18 - 9),
-                y: player.y + player.height / 2 + (Math.random() * 16 - 8),
-                vx: Math.cos(angle) * speed,
-                vy: Math.sin(angle) * speed,
-                age: 0,
-                life: 650 + Math.random() * 250,
-                size: 13 + Math.random() * 4
-            });
-        }
-
-        function updateScorePopups(deltaTime) {
-            for (let i = scorePopups.length - 1; i >= 0; i--) {
-                const popup = scorePopups[i];
-
-                popup.age += deltaTime;
-                popup.x += popup.vx * (deltaTime / 16.67);
-                popup.y += popup.vy * (deltaTime / 16.67);
-                popup.vy += 0.018 * (deltaTime / 16.67);
-
-                if (popup.age >= popup.life) {
-                    scorePopups.splice(i, 1);
-                }
-            }
-        }
-
-        function updateGame(deltaTime) {
-            updateScorePopups(deltaTime);
-
-            if (gameState !== "running") {
-                return;
-            }
-
-            const frameScale = deltaTime / 16.67;
-            const baseSpeed = 4.4;
-            const speed = Math.min(baseSpeed * getSpeedMultiplier(), 12.5);
-
-            const previousBottom = player.y + player.height;
-
-            player.velocityY += player.gravity * frameScale;
-            player.y += player.velocityY * frameScale;
-
-            pickupTimer += deltaTime;
-            railTimer += deltaTime;
-            barrelTimer += deltaTime;
-
-            if (pickupTimer >= pickupInterval) {
-                spawnWaxPickup();
-                pickupTimer = 0;
-            }
-
-            if (railTimer >= railInterval) {
-                spawnGrindRail();
-                railTimer = 0;
-            }
-
-            if (barrelTimer >= barrelInterval) {
-                spawnBarrel();
-                barrelTimer = 0;
-            }
-
-            for (let i = waxPickups.length - 1; i >= 0; i--) {
-                waxPickups[i].x -= speed * frameScale;
-
-                if (waxPickups[i].x + waxPickups[i].width < 0) {
-                    waxPickups.splice(i, 1);
-                }
-            }
-
-            for (let i = grindRails.length - 1; i >= 0; i--) {
-                grindRails[i].x -= speed * frameScale;
-
-                if (grindRails[i].x + grindRails[i].width < 0) {
-                    grindRails.splice(i, 1);
-                }
-            }
-
-            for (let i = barrels.length - 1; i >= 0; i--) {
-                barrels[i].x -= speed * frameScale;
-
-                if (barrels[i].x + barrels[i].width < 0) {
-                    barrels.splice(i, 1);
-                }
-            }
-
-            checkPickupCollisions();
-            checkRailGrinding(deltaTime, previousBottom);
-            checkBarrelCollisions();
-
-            if (gameState !== "running") {
-                updateWaxDisplay();
-                return;
-            }
-
-            if (!player.onRail && player.y >= groundY - player.height) {
-                player.y = groundY - player.height;
-                player.velocityY = 0;
-                player.grounded = true;
-            }
-
-            scoreElement.textContent = String(Math.floor(score));
-            updateLevelDisplay();
-            updateWaxDisplay();
-        }
-
-        function checkPickupCollisions() {
-            const playerHitbox = {
-                x: player.x + 5,
-                y: player.y + 5,
-                width: player.width - 10,
-                height: player.height - 8
-            };
-
-            for (let i = waxPickups.length - 1; i >= 0; i--) {
-                const pickup = waxPickups[i];
-
-                const pickupHitbox = {
-                    x: pickup.x + 5,
-                    y: pickup.y + 5,
-                    width: pickup.width - 10,
-                    height: pickup.height - 10
-                };
-
-                const collision =
-                    playerHitbox.x < pickupHitbox.x + pickupHitbox.width &&
-                    playerHitbox.x + playerHitbox.width > pickupHitbox.x &&
-                    playerHitbox.y < pickupHitbox.y + pickupHitbox.height &&
-                    playerHitbox.y + playerHitbox.height > pickupHitbox.y;
-
-                if (collision) {
-                    wax = Math.min(MAX_WAX, wax + WAX_PICKUP_AMOUNT);
-                    waxPickups.splice(i, 1);
-                }
-            }
-        }
-
-        function checkRailGrinding(deltaTime, previousBottom) {
-            isGrinding = false;
-            player.onRail = false;
-
-            const playerBottom = player.y + player.height;
-
-            for (const rail of grindRails) {
-                const railTop = rail.y;
-
-                const horizontalOverlap =
-                    player.x + player.width > rail.x + 6 &&
-                    player.x < rail.x + rail.width - 6;
-
-                const landingOnTop =
-                    horizontalOverlap &&
-                    player.velocityY >= 0 &&
-                    previousBottom <= railTop + 4 &&
-                    playerBottom >= railTop &&
-                    playerBottom <= railTop + 22;
-
-                if (landingOnTop) {
-                    player.y = railTop - player.height;
-                    player.velocityY = 0;
-                    player.grounded = true;
-                    player.onRail = true;
-                    isGrinding = true;
-
-                    wax -= WAX_DRAIN_RATE * (deltaTime / 1000);
-
-                    const previousScore = Math.floor(score);
-                    score += GRIND_SCORE_RATE * (deltaTime / 1000);
-                    const newScore = Math.floor(score);
-
-                    for (let point = previousScore + 1; point <= newScore; point++) {
-                        spawnScorePopup();
-                    }
-
-                    lastWholeScore = newScore;
-
-                    if (wax <= 0) {
-                        wax = 0;
-                        endGame("No Wax. No Grind.");
-                    }
-
-                    return;
-                }
-            }
-        }
-
-        function checkBarrelCollisions() {
-            const playerHitbox = {
-                x: player.x + 7,
-                y: player.y + 8,
-                width: player.width - 12,
-                height: player.height - 10
-            };
-
-            for (const barrel of barrels) {
-                const barrelHitbox = {
-                    x: barrel.x + 3,
-                    y: barrel.y + 3,
-                    width: barrel.width - 6,
-                    height: barrel.height - 3
-                };
-
-                const collision =
-                    playerHitbox.x < barrelHitbox.x + barrelHitbox.width &&
-                    playerHitbox.x + playerHitbox.width > barrelHitbox.x &&
-                    playerHitbox.y < barrelHitbox.y + barrelHitbox.height &&
-                    playerHitbox.y + playerHitbox.height > barrelHitbox.y;
-
-                if (collision) {
-                    endGame("You Hit A Barrel.");
-                    return;
-                }
-            }
-        }
-
-        function endGame(reason) {
-            gameState = "gameover";
-            gameOverReason = reason;
-            gameButton.textContent = "Restart";
-
-            const finalScore = Math.floor(score);
-            scoreElement.textContent = finalScore;
-
-            if (finalScore > bestScore) {
-                bestScore = finalScore;
-                localStorage.setItem("glitchWaxGrindBestScoreV3", String(bestScore));
-                bestElement.textContent = bestScore;
-            }
-        }
-
-        function drawBackground() {
-            ctx.clearRect(0, 0, gameWidth, gameHeight);
-
-            const gradient = ctx.createLinearGradient(0, 0, gameWidth, gameHeight);
-            gradient.addColorStop(0, "rgba(255, 43, 214, 0.12)");
-            gradient.addColorStop(0.5, "rgba(5, 5, 10, 0.95)");
-            gradient.addColorStop(1, "rgba(0, 245, 255, 0.12)");
-
-            ctx.fillStyle = gradient;
-            ctx.fillRect(0, 0, gameWidth, gameHeight);
-
-            const gridOffset = gameState === "running" ? -(Date.now() / 28 * getSpeedMultiplier() % 32) : 0;
-
-            ctx.strokeStyle = "rgba(255, 255, 255, 0.06)";
-            ctx.lineWidth = 1;
-
-            for (let x = gridOffset; x < gameWidth; x += 32) {
-                ctx.beginPath();
-                ctx.moveTo(x, 0);
-                ctx.lineTo(x, gameHeight);
-                ctx.stroke();
-            }
-
-            for (let y = 0; y < gameHeight; y += 32) {
-                ctx.beginPath();
-                ctx.moveTo(0, y);
-                ctx.lineTo(gameWidth, y);
-                ctx.stroke();
-            }
-
-            ctx.strokeStyle = "rgba(0, 245, 255, 0.7)";
-            ctx.lineWidth = 3;
-            ctx.beginPath();
-            ctx.moveTo(0, groundY + 5);
-            ctx.lineTo(gameWidth, groundY + 5);
-            ctx.stroke();
-
-            ctx.strokeStyle = "rgba(255, 43, 214, 0.7)";
-            ctx.lineWidth = 1;
-            ctx.beginPath();
-            ctx.moveTo(0, groundY + 10);
-            ctx.lineTo(gameWidth, groundY + 10);
-            ctx.stroke();
-        }
-
-        function drawPlayer() {
-            const x = player.x;
-            const y = player.y;
-
-            ctx.save();
-
-            if (isGrinding && gameState === "running") {
-                ctx.strokeStyle = "rgba(255, 255, 255, 0.85)";
-                ctx.lineWidth = 2;
-
-                for (let i = 0; i < 4; i++) {
-                    ctx.beginPath();
-                    ctx.moveTo(x + 3 + i * 8, y + player.height + 4);
-                    ctx.lineTo(x - 8 + i * 8, y + player.height + 15 + Math.random() * 4);
-                    ctx.stroke();
-                }
-            }
-
-            ctx.strokeStyle = "#00f5ff";
-            ctx.lineWidth = 5;
-            ctx.lineCap = "round";
-            ctx.beginPath();
-            ctx.moveTo(x - 8, y + player.height + 3);
-            ctx.lineTo(x + player.width + 14, y + player.height);
-            ctx.stroke();
-
-            ctx.fillStyle = "#ffffff";
-            ctx.beginPath();
-            ctx.arc(x + 4, y + player.height + 8, 4, 0, Math.PI * 2);
-            ctx.fill();
-
-            ctx.beginPath();
-            ctx.arc(x + player.width + 4, y + player.height + 6, 4, 0, Math.PI * 2);
-            ctx.fill();
-
-            ctx.strokeStyle = isGrinding ? "#00f5ff" : "#ff2bd6";
-            ctx.lineWidth = 4;
-
-            ctx.beginPath();
-            ctx.arc(x + 16, y + 8, 8, 0, Math.PI * 2);
-            ctx.stroke();
-
-            ctx.beginPath();
-            ctx.moveTo(x + 16, y + 18);
-            ctx.lineTo(x + 20, y + 34);
-            ctx.lineTo(x + 29, y + 44);
-            ctx.stroke();
-
-            ctx.beginPath();
-            ctx.moveTo(x + 20, y + 31);
-            ctx.lineTo(x + 9, y + 43);
-            ctx.stroke();
-
-            ctx.beginPath();
-            ctx.moveTo(x + 18, y + 24);
-            ctx.lineTo(x + 31, y + 22);
-            ctx.stroke();
-
-            ctx.restore();
-        }
-
-        function drawWaxPickup(pickup) {
-            ctx.save();
-
-            const bob = Math.sin(Date.now() / 160 + pickup.bobOffset) * 3;
-            const drawY = pickup.y + bob;
-
-            ctx.shadowColor = "rgba(0, 245, 255, 0.55)";
-            ctx.shadowBlur = 12;
-
-            if (waxImageLoaded) {
-                ctx.drawImage(waxImage, pickup.x, drawY, pickup.width, pickup.height);
-            } else {
-                ctx.fillStyle = "#ffffff";
-                ctx.fillRect(pickup.x, drawY, pickup.width, pickup.height);
-
-                ctx.fillStyle = "#050509";
-                ctx.font = "bold 12px Arial, Helvetica, sans-serif";
-                ctx.textAlign = "center";
-                ctx.fillText("WAX", pickup.x + pickup.width / 2, drawY + 25);
-            }
-
-            ctx.restore();
-        }
-
-        function drawGrindRail(rail) {
-            ctx.save();
-
-            ctx.fillStyle = "rgba(0, 245, 255, 0.12)";
-            ctx.fillRect(rail.x, rail.y - 4, rail.width, rail.height + 8);
-
-            ctx.strokeStyle = "#00f5ff";
-            ctx.lineWidth = 5;
-            ctx.lineCap = "round";
-
-            ctx.beginPath();
-            ctx.moveTo(rail.x, rail.y);
-            ctx.lineTo(rail.x + rail.width, rail.y);
-            ctx.stroke();
-
-            ctx.strokeStyle = "#ff2bd6";
-            ctx.lineWidth = 2;
-
-            ctx.beginPath();
-            ctx.moveTo(rail.x, rail.y + 8);
-            ctx.lineTo(rail.x + rail.width, rail.y + 8);
-            ctx.stroke();
-
-            ctx.strokeStyle = "rgba(255, 255, 255, 0.5)";
-            ctx.lineWidth = 2;
-
-            for (let x = rail.x + 22; x < rail.x + rail.width; x += 44) {
-                ctx.beginPath();
-                ctx.moveTo(x, rail.y + 6);
-                ctx.lineTo(x - 12, groundY + 8);
-                ctx.stroke();
-            }
-
-            ctx.restore();
-        }
-
-        function drawBarrel(barrel) {
-            ctx.save();
-
-            ctx.fillStyle = "#ff2bd6";
-            ctx.fillRect(barrel.x, barrel.y, barrel.width, barrel.height);
-
-            ctx.fillStyle = "rgba(255, 255, 255, 0.22)";
-            ctx.fillRect(barrel.x + 4, barrel.y + 4, barrel.width - 8, 5);
-            ctx.fillRect(barrel.x + 4, barrel.y + barrel.height - 10, barrel.width - 8, 5);
-
-            ctx.strokeStyle = "#00f5ff";
-            ctx.lineWidth = 2;
-            ctx.strokeRect(barrel.x, barrel.y, barrel.width, barrel.height);
-
-            ctx.restore();
-        }
-
-        function drawScorePopups() {
-            ctx.save();
-            ctx.textAlign = "center";
-            ctx.textBaseline = "middle";
-
-            for (const popup of scorePopups) {
-                const alpha = 1 - (popup.age / popup.life);
-
-                ctx.globalAlpha = Math.max(0, alpha);
-                ctx.font = "bold " + popup.size + "px Arial, Helvetica, sans-serif";
-                ctx.lineWidth = 3;
-                ctx.strokeStyle = "rgba(5, 5, 10, 0.9)";
-                ctx.fillStyle = "#ffd84d";
-
-                ctx.strokeText("+1", popup.x, popup.y);
-                ctx.fillText("+1", popup.x, popup.y);
-            }
-
-            ctx.restore();
-        }
-
-        function drawWarnings() {
-            if (gameState !== "running") {
-                return;
-            }
-
-            ctx.save();
-            ctx.font = "bold 16px Arial, Helvetica, sans-serif";
-            ctx.textAlign = "center";
-
-            if (isGrinding) {
-                ctx.fillStyle = "#00f5ff";
-                ctx.fillText("Grinding: scoring points and using wax", gameWidth / 2, 30);
-            } else if (wax <= 20) {
-                ctx.fillStyle = "#ff2bd6";
-                ctx.fillText("Low wax. Skip rails or find a pack.", gameWidth / 2, 30);
-            }
-
-            ctx.restore();
-        }
-
-        function drawMessage() {
-            if (gameState === "running") {
-                return;
-            }
-
-            ctx.save();
-            ctx.fillStyle = "rgba(5, 5, 10, 0.7)";
-            ctx.fillRect(0, 0, gameWidth, gameHeight);
-
-            ctx.fillStyle = "#ffffff";
-            ctx.font = "bold 24px Arial, Helvetica, sans-serif";
-            ctx.textAlign = "center";
-
-            if (gameState === "ready") {
-                ctx.fillText("Glitch Grind", gameWidth / 2, 60);
-
-                ctx.font = "16px Arial, Helvetica, sans-serif";
-                ctx.fillStyle = "#c7c7d1";
-                ctx.fillText("Land on rails to score.", gameWidth / 2, 92);
-                ctx.fillText("Jump barrels. Collect wax.", gameWidth / 2, 117);
-                ctx.fillText("Every 200 points increases speed by 15%.", gameWidth / 2, 142);
-                ctx.fillText("Press Space or Tap to Start.", gameWidth / 2, 167);
-            } else if (gameState === "gameover") {
-                ctx.fillText(gameOverReason, gameWidth / 2, 88);
-
-                ctx.font = "16px Arial, Helvetica, sans-serif";
-                ctx.fillStyle = "#c7c7d1";
-                ctx.fillText("Press Space, tap, or hit Restart to try again.", gameWidth / 2, 120);
-            }
-
-            ctx.restore();
-        }
-
-        function drawGame() {
-            drawBackground();
-
-            for (const rail of grindRails) {
-                drawGrindRail(rail);
-            }
-
-            for (const barrel of barrels) {
-                drawBarrel(barrel);
-            }
-
-            for (const pickup of waxPickups) {
-                drawWaxPickup(pickup);
-            }
-
-            drawPlayer();
-            drawScorePopups();
-            drawWarnings();
-            drawMessage();
-        }
-
-        function gameLoop(timestamp) {
-            if (!lastFrameTime) {
-                lastFrameTime = timestamp;
-            }
-
-            const deltaTime = Math.min(timestamp - lastFrameTime, 40);
-            lastFrameTime = timestamp;
-
-            updateGame(deltaTime);
-            drawGame();
-
-            requestAnimationFrame(gameLoop);
-        }
-
-        window.addEventListener("keydown", function(event) {
-            if (event.code === "Space" || event.code === "ArrowUp") {
-                event.preventDefault();
-                startOrJump();
-            }
-        });
-
-        canvas.addEventListener("click", startOrJump);
-        gameButton.addEventListener("click", startOrJump);
-
-        canvas.addEventListener("touchstart", function(event) {
-            event.preventDefault();
-            startOrJump();
-        }, { passive: false });
-
-        drawGame();
-        requestAnimationFrame(gameLoop);
-    </script>
+    <footer class="site-footer">
+        <div class="container footer-inner">
+            <p>&copy; 2026 Glitch Wax. All rights reserved.</p>
+            <div class="footer-links">
+                <a href="index.html">Home</a>
+                <a href="store.html">Store</a>
+                <a href="contact.html">Contact</a>
+            </div>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
 </body>
 </html>
+
+<!--
+THIS WEBSITE IS A PRODUCT OF The Temp Solution, LLC. ALL CODE, IMAGES, AND APPLICATIONS ARE SOLELY OWNED BY Glitch Wax, LLC. ANY ATTEMPT TO RECREATE, REVERSE ENGINEER, OR REPLICATE THIS WEBSITE WILL BE PROSECUTED TO THE FULLEST EXTENT OF THE LAW
+
+IF YOU'RE VIEWING THIS COMMENT, NICE JOB. I RECOMMEND READING "PROJECT HAIL MARY" BY ANDY WEIR, AND THEN GOING TO SEE THE MOVIE
+-->
