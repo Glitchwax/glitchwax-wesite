@@ -5,6 +5,10 @@ const DOUBLE_PACK_WHITE_VARIATION_ID = "ZWBSYUZ6PGFILSV5S5BZ7BFG";
 const DOUBLE_PACK_BLUE_RED_VARIATION_ID = "3BC6J4JGF7YPNFI5X7M7M3VT";
 const DOUBLE_PACK_YELLOW_VARIATION_ID = "25BFW2NOMJ3OCMXQNPCBTBM6";
 
+const STICK_O_WAX_PRICE_CENTS = 850;
+const DOUBLE_PACK_PRICE_CENTS = 1000;
+const CURRENCY = "USD";
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -139,6 +143,7 @@ function validateContactSubmission(body) {
   }
 
   const namePattern = /^[a-zA-Z\s.'-]+$/;
+
   if (!namePattern.test(name)) {
     return {
       isValid: false,
@@ -154,6 +159,7 @@ function validateContactSubmission(body) {
   }
 
   const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+
   if (!emailPattern.test(email)) {
     return {
       isValid: false,
@@ -307,14 +313,64 @@ async function handleCreateCheckout(request, env) {
       );
     }
 
+    const saleItems = [
+      {
+        catalogObjectId: STICK_O_WAX_WHITE_VARIATION_ID,
+        quantity: stickOWaxWhiteQty,
+        priceCents: STICK_O_WAX_PRICE_CENTS
+      },
+      {
+        catalogObjectId: STICK_O_WAX_BLACK_VARIATION_ID,
+        quantity: stickOWaxBlackQty,
+        priceCents: STICK_O_WAX_PRICE_CENTS
+      },
+      {
+        catalogObjectId: DOUBLE_PACK_WHITE_VARIATION_ID,
+        quantity: doublePackWhiteQty,
+        priceCents: DOUBLE_PACK_PRICE_CENTS
+      },
+      {
+        catalogObjectId: DOUBLE_PACK_BLUE_RED_VARIATION_ID,
+        quantity: doublePackBlueRedQty,
+        priceCents: DOUBLE_PACK_PRICE_CENTS
+      },
+      {
+        catalogObjectId: DOUBLE_PACK_YELLOW_VARIATION_ID,
+        quantity: doublePackYellowQty,
+        priceCents: DOUBLE_PACK_PRICE_CENTS
+      }
+    ];
+
     const lineItems = [];
 
-    addLineItem(lineItems, STICK_O_WAX_WHITE_VARIATION_ID, stickOWaxWhiteQty);
-    addLineItem(lineItems, STICK_O_WAX_BLACK_VARIATION_ID, stickOWaxBlackQty);
+    saleItems.forEach((item) => {
+      addLineItem(lineItems, item.catalogObjectId, item.quantity);
+    });
 
-    addLineItem(lineItems, DOUBLE_PACK_WHITE_VARIATION_ID, doublePackWhiteQty);
-    addLineItem(lineItems, DOUBLE_PACK_BLUE_RED_VARIATION_ID, doublePackBlueRedQty);
-    addLineItem(lineItems, DOUBLE_PACK_YELLOW_VARIATION_ID, doublePackYellowQty);
+    const b2g1DiscountCents = calculateB2G1DiscountCents(saleItems);
+
+    const order = {
+      location_id: env.SQUARE_LOCATION_ID,
+      line_items: lineItems,
+      pricing_options: {
+        auto_apply_taxes: true
+      }
+    };
+
+    if (b2g1DiscountCents > 0) {
+      order.discounts = [
+        {
+          uid: "july4-b2g1",
+          name: "July 4 Sale - Buy 2 Get 1 Free",
+          type: "FIXED_AMOUNT",
+          scope: "ORDER",
+          amount_money: {
+            amount: b2g1DiscountCents,
+            currency: CURRENCY
+          }
+        }
+      ];
+    }
 
     const squareBaseUrl =
       env.SQUARE_ENVIRONMENT === "production"
@@ -323,14 +379,7 @@ async function handleCreateCheckout(request, env) {
 
     const squareRequestBody = {
       idempotency_key: crypto.randomUUID(),
-      order: {
-        location_id: env.SQUARE_LOCATION_ID,
-        line_items: lineItems,
-        pricing_options: {
-          auto_apply_taxes: true,
-          auto_apply_discounts: true
-        }
-      },
+      order,
       checkout_options: {
         ask_for_shipping_address: true,
         redirect_url: "https://glitchwax.com/order-success.html"
@@ -353,6 +402,7 @@ async function handleCreateCheckout(request, env) {
     const squareResponseText = await squareResponse.text();
 
     let squareData;
+
     try {
       squareData = JSON.parse(squareResponseText);
     } catch (parseError) {
@@ -418,4 +468,26 @@ function addLineItem(lineItems, catalogObjectId, quantity) {
       quantity: String(quantity)
     });
   }
+}
+
+function calculateB2G1DiscountCents(items) {
+  const unitPrices = [];
+
+  items.forEach((item) => {
+    for (let i = 0; i < item.quantity; i++) {
+      unitPrices.push(item.priceCents);
+    }
+  });
+
+  if (unitPrices.length < 3) {
+    return 0;
+  }
+
+  unitPrices.sort((a, b) => a - b);
+
+  const freeItemCount = Math.floor(unitPrices.length / 3);
+
+  return unitPrices
+    .slice(0, freeItemCount)
+    .reduce((total, priceCents) => total + priceCents, 0);
 }
