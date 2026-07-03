@@ -327,7 +327,8 @@ async function handleCreateCheckout(request, env) {
         location_id: env.SQUARE_LOCATION_ID,
         line_items: lineItems,
         pricing_options: {
-          auto_apply_taxes: true
+          auto_apply_taxes: true,
+          auto_apply_discounts: true
         }
       },
       checkout_options: {
