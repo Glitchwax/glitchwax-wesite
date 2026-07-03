@@ -89,7 +89,7 @@ a {
     z-index: 0;
 }
 
-body > *:not(.background-logo):not(#glitch-overlay) {
+body > *:not(.background-logo):not(#glitch-overlay):not(#fireworks-overlay) {
     position: relative;
     z-index: 1;
 }
@@ -1670,4 +1670,194 @@ CONTACT PAGE BUTTON STYLING AND EFFECTS
 
 .product-warning-section p:last-child {
     margin-bottom: 0;
+}
+
+/*
+
+JULY 4TH SALE STYLES
+
+*/
+
+
+.store-sale-tile-section {
+  padding: 1.5rem 0 0;
+}
+
+.store-sale-tile {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  padding: 1.25rem 1.5rem;
+  border: 2px solid rgba(255, 255, 255, 0.55);
+  border-radius: 18px;
+  background: linear-gradient(
+    to bottom,
+    #e85f5f 0%,
+    #ffffff 50%,
+    #4f8dff 100%
+  );
+  color: #111111;
+  box-shadow: 0 16px 34px rgba(0, 0, 0, 0.16);
+}
+
+.store-sale-copy {
+  max-width: 760px;
+}
+
+.store-sale-kicker {
+  margin: 0 0 0.35rem;
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #a80000;
+}
+
+.store-sale-tile h2 {
+  margin: 0 0 0.5rem;
+  font-size: clamp(1.35rem, 3vw, 2rem);
+  color: #111111;
+}
+
+.store-sale-tile p {
+  margin: 0;
+  color: #1f1f1f;
+}
+
+.store-sale-link {
+  flex-shrink: 0;
+  display: inline-block;
+  padding: 0.75rem 1rem;
+  border-radius: 999px;
+  text-decoration: none;
+  font-weight: 800;
+  background: #003b8f;
+  color: #ffffff;
+}
+
+.store-sale-link:hover {
+  transform: translateY(-1px);
+}
+
+@media (max-width: 700px) {
+  .store-sale-tile {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+.home-sale-banner {
+  padding: 2rem 0 3rem;
+}
+
+.home-sale-banner-inner {
+  min-height: clamp(520px, 72vh, 760px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.25rem;
+  text-align: center;
+  padding: 4rem 2rem;
+  border-radius: 28px;
+  border: 2px solid rgba(255, 255, 255, 0.55);
+background: linear-gradient(
+  to bottom right,
+  #e85f5f 0%,
+  #ffffff 50%,
+  #4f8dff 100%
+);
+  color: #111111;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.24);
+}
+
+.home-sale-kicker {
+  margin: 0;
+  font-size: clamp(1rem, 2vw, 1.35rem);
+  font-weight: 900;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #a80000;
+}
+
+.home-sale-banner h1 {
+  max-width: 1000px;
+  margin: 0;
+  font-size: clamp(4rem, 12vw, 9rem);
+  line-height: 0.9;
+  letter-spacing: -0.07em;
+  color: #111111;
+}
+
+.home-sale-subtitle {
+  max-width: 850px;
+  margin: 0;
+  font-size: clamp(1.2rem, 2.6vw, 1.7rem);
+  line-height: 1.45;
+  color: #1f1f1f;
+}
+
+.home-sale-button {
+  display: inline-block;
+  margin-top: 0.75rem;
+  padding: 1rem 1.5rem;
+  border-radius: 999px;
+  background: #003b8f;
+  color: #ffffff;
+  text-decoration: none;
+  font-weight: 900;
+  font-size: 1.05rem;
+}
+
+.home-sale-button:hover {
+  transform: translateY(-1px);
+}
+
+@media (max-width: 700px) {
+  .home-sale-banner {
+    padding: 1.25rem 0 2rem;
+  }
+
+  .home-sale-banner-inner {
+    min-height: 520px;
+    padding: 3rem 1.25rem;
+    border-radius: 22px;
+  }
+
+  .home-sale-banner h1 {
+    font-size: clamp(3rem, 16vw, 5rem);
+  }
+}
+
+.home-sale-date {
+  margin: 0.25rem 0 0;
+  font-size: clamp(1rem, 2vw, 1.25rem);
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #a80000;
+}
+
+/* =========================
+   FIREWORKS SALE OVERLAY
+========================= */
+
+#fireworks-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.35s ease;
+}
+
+#fireworks-overlay.fireworks-active {
+    opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    #fireworks-overlay {
+        display: none;
+    }
 }

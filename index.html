@@ -14,6 +14,7 @@ IT ALSO BREAKS DOWN THE ABSTRACT SPECIFICS OF THE COMPANY, INCLUDING WHAT THEY D
 </head>
 <body>
     <div id="glitch-overlay"></div>
+    <canvas id="fireworks-overlay" aria-hidden="true"></canvas>
     <div class="background-logo"></div>
 
     <header class="site-header">
@@ -31,6 +32,52 @@ IT ALSO BREAKS DOWN THE ABSTRACT SPECIFICS OF THE COMPANY, INCLUDING WHAT THEY D
     </header>
 
     <main>
+        <section class="home-sale-banner">
+            <div class="container">
+                <div class="home-sale-banner-inner">
+                    <p class="home-sale-kicker">Fourth of July Sale</p>
+                    <h1>Buy 2, Get 1 Free</h1>
+                    <p class="home-sale-subtitle">
+                        Plus free shipping for a limited time. Stock up for summer sessions
+                        and grab an extra wax while the sale is live.
+                    </p>
+                    <p class="home-sale-date">Sale runs until July 18th.</p>
+                    <a href="store.html" class="home-sale-button">Shop the Sale</a>
+                </div>
+            </div>
+        </section>
+
+        <section class="products-preview">
+            <div class="container">
+                <div class="section-heading">
+                    <p class="section-label">Our Products</p>
+                    <h2>Stick With The Traditional Or Leave The Pack Behind</h2>
+                </div>
+
+                <div class="product-grid">
+                    <article class="product-card">
+                        <img src="images/product-double.jpg" alt="Double pack wax">
+                        <h3>Two Pack</h3>
+                        <p class="price">$10.00</p>
+                        <p>
+                            For skaters who want more wax for more occasions, the Two Pack is still our premium wax
+                        </p>
+                        <a href="product-double.html" class="button button-primary">View Product</a>
+                    </article>
+
+                    <article class="product-card">
+                        <img src="images/product-single.jpg" alt="Single stick wax">
+                        <h3>Stick o Wax</h3>
+                        <p class="price">$8.50</p>
+                        <p>
+                            A smartly packaged, and easily portable option, the Stick o Wax holds 2.5oz of our premium wax
+                        </p>
+                        <a href="product-single.html" class="button button-primary">View Product</a>
+                    </article>
+                </div>
+            </div>
+        </section>
+
         <section class="hero hero-glitch-target">
             <div class="hero-glitch-layer hero-glitch-base">
                 <div class="container hero-grid">
@@ -41,7 +88,6 @@ IT ALSO BREAKS DOWN THE ABSTRACT SPECIFICS OF THE COMPANY, INCLUDING WHAT THEY D
                             We glitched the system with Glitch Wax. We curated it for skaters to learn and progress within the world of skating.
                             We set out to make wax we’d actually buy—at a price that made sense.
                             We sell skate wax that has been developed and crafted at home for skaters, by skaters.
-                            
                         </p>
 
                         <div class="hero-buttons">
@@ -117,88 +163,57 @@ IT ALSO BREAKS DOWN THE ABSTRACT SPECIFICS OF THE COMPANY, INCLUDING WHAT THEY D
             </div>
         </section>
 
-<section class="feature-section">
-    <div class="container feature-layout">
-        <div class="feature-video-column">
-            <div class="feature-video-card">
-                <video
-                    class="feature-video"
-                    muted
-                    loop
-                    playsinline
-                    preload="metadata"
-                    data-autoplay-once
-                >
-                    <source src="images/why-glitch-wax.mp4" type="video/mp4">
-                    Your browser does not support the video tag.
-                </video>
-            </div>
-        </div>
-
-        <div class="product-description">
-            <p class="section-label">Why Glitch Wax?</p>
-            <h2>A Simple Container With An Advanced Product</h2>
-
-            <div class="product-description-copy">
-                <p>Glitch Wax is a focused brand, offering only two products:</p>
-
-                <p><strong>The Stick o Wax</strong>, a deodorant style wax made to be discreet and portable</p>
-
-                <p><strong>The Two Pack</strong>, two disks of traditional wax, crafted nontraditionally</p>
-
-                <p>
-                    Both products were crafted with a recipe that combines temperature resistance.
-                    Less frozen wax in the cold. Less melted wax in the heat.
-                </p>
-            </div>
-
-            <div class="feature-points">
-                <div class="feature-point">
-                    <h3>Value</h3>
-                    <p>Glitch Wax is a home crafted, hand made product, at a price <i>we</i> would pay</p>
+        <section class="feature-section">
+            <div class="container feature-layout">
+                <div class="feature-video-column">
+                    <div class="feature-video-card">
+                        <video
+                            class="feature-video"
+                            muted
+                            loop
+                            playsinline
+                            preload="metadata"
+                            data-autoplay-once
+                        >
+                            <source src="images/why-glitch-wax.mp4" type="video/mp4">
+                            Your browser does not support the video tag.
+                        </video>
+                    </div>
                 </div>
 
-                <div class="feature-point">
-                    <h3>Application</h3>
-                    <p>Glitch Wax is easy to transport, easy to apply, and <i>dangerous</i> to ride</p>
-                </div>
+                <div class="product-description">
+                    <p class="section-label">Why Glitch Wax?</p>
+                    <h2>A Simple Container With An Advanced Product</h2>
 
-                <div class="feature-point">
-                    <h3>Community</h3>
-                    <p>Designed, tested, and used by <i>passionate</i> riders, Glitch Wax is For Skaters, By Skaters</p>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
+                    <div class="product-description-copy">
+                        <p>Glitch Wax is a focused brand, offering only two products:</p>
 
-        <section class="products-preview">
-            <div class="container">
-                <div class="section-heading">
-                    <p class="section-label">Our Products</p>
-                    <h2>Stick With The Traditional Or Leave The Pack Behind</h2>
-                </div>
+                        <p><strong>The Stick o Wax</strong>, a deodorant style wax made to be discreet and portable</p>
 
-                <div class="product-grid">
-                    <article class="product-card">
-                        <img src="images/product-double.jpg" alt="Double pack wax">
-                        <h3>Two Pack</h3>
-                        <p class="price">$10.00</p>
+                        <p><strong>The Two Pack</strong>, two disks of traditional wax, crafted nontraditionally</p>
+
                         <p>
-                            For skaters who want more wax for more occasions, the Two Pack is still our premium wax
+                            Both products were crafted with a recipe that combines temperature resistance.
+                            Less frozen wax in the cold. Less melted wax in the heat.
                         </p>
-                        <a href="product-double.html" class="button button-primary">View Product</a>
-                    </article>
+                    </div>
 
-                    <article class="product-card">
-                        <img src="images/product-single.jpg" alt="Single stick wax">
-                        <h3>Stick o Wax</h3>
-                        <p class="price">$8.50</p>
-                        <p>
-                            A smartly packaged, and easily portable option, the Stick o Wax holds 2.5oz of our premium wax
-                        </p>
-                        <a href="product-single.html" class="button button-primary">View Product</a>
-                    </article>                    
+                    <div class="feature-points">
+                        <div class="feature-point">
+                            <h3>Value</h3>
+                            <p>Glitch Wax is a home crafted, hand made product, at a price <i>we</i> would pay</p>
+                        </div>
+
+                        <div class="feature-point">
+                            <h3>Application</h3>
+                            <p>Glitch Wax is easy to transport, easy to apply, and <i>dangerous</i> to ride</p>
+                        </div>
+
+                        <div class="feature-point">
+                            <h3>Community</h3>
+                            <p>Designed, tested, and used by <i>passionate</i> riders, Glitch Wax is For Skaters, By Skaters</p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </section>

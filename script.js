@@ -1,13 +1,28 @@
 /*============================
-MAIN PAGE GLITCH EFFECT JAVA
+MAIN PAGE STARTUP EFFECT
+Fireworks for sale homepage, original glitch fallback
 ==============================*/
+
 document.addEventListener("DOMContentLoaded", function () {
-    const hasSeenGlitch = sessionStorage.getItem("glitchPlayed");
     const heroGlitchTarget = document.querySelector(".hero-glitch-target");
+    const saleBanner = document.querySelector(".home-sale-banner");
+    const fireworksCanvas = document.getElementById("fireworks-overlay");
+    const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    if (prefersReducedMotion) {
+        return;
+    }
+
+    if (saleBanner && fireworksCanvas) {
+        playHomepageFireworks(fireworksCanvas);
+        return;
+    }
 
     if (!heroGlitchTarget) {
         return;
     }
+
+    const hasSeenGlitch = sessionStorage.getItem("glitchPlayed");
 
     if (!hasSeenGlitch) {
         document.body.classList.add("play-glitch");
@@ -18,6 +33,176 @@ document.addEventListener("DOMContentLoaded", function () {
         }, 1400);
     }
 });
+
+function playHomepageFireworks(canvas) {
+    const hasSeenFireworks = sessionStorage.getItem("fireworksPlayed");
+
+    if (hasSeenFireworks) {
+        return;
+    }
+
+    sessionStorage.setItem("fireworksPlayed", "true");
+
+    const ctx = canvas.getContext("2d");
+
+    if (!ctx) {
+        return;
+    }
+
+    const duration = 2400;
+    const launchInterval = 170;
+    const colors = ["#e85f5f", "#ffffff", "#4f8dff"];
+
+    let width = window.innerWidth;
+    let height = window.innerHeight;
+    let animationFrame = null;
+    let startTime = null;
+    let lastLaunch = 0;
+    let rockets = [];
+    let particles = [];
+
+    function resizeCanvas() {
+        const pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
+
+        width = window.innerWidth;
+        height = window.innerHeight;
+
+        canvas.width = width * pixelRatio;
+        canvas.height = height * pixelRatio;
+
+        canvas.style.width = width + "px";
+        canvas.style.height = height + "px";
+
+        ctx.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+    }
+
+    function random(min, max) {
+        return Math.random() * (max - min) + min;
+    }
+
+    function pickColor() {
+        return colors[Math.floor(Math.random() * colors.length)];
+    }
+
+    function launchRocket() {
+        rockets.push({
+            x: random(width * 0.12, width * 0.88),
+            y: height + 30,
+            targetY: random(height * 0.14, height * 0.42),
+            vx: random(-1.4, 1.4),
+            vy: random(-13, -9.5),
+            color: pickColor()
+        });
+    }
+
+    function explode(x, y, color) {
+        const particleCount = 54;
+
+        for (let i = 0; i < particleCount; i++) {
+            const angle = (Math.PI * 2 * i) / particleCount;
+            const speed = random(2.2, 6.4);
+
+            particles.push({
+                x: x,
+                y: y,
+                vx: Math.cos(angle) * speed,
+                vy: Math.sin(angle) * speed,
+                life: 1,
+                decay: random(0.014, 0.028),
+                size: random(1.5, 3.4),
+                color: color
+            });
+        }
+    }
+
+    function drawRocket(rocket) {
+        ctx.beginPath();
+        ctx.arc(rocket.x, rocket.y, 3.2, 0, Math.PI * 2);
+        ctx.fillStyle = rocket.color;
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.moveTo(rocket.x, rocket.y + 7);
+        ctx.lineTo(rocket.x - rocket.vx * 5, rocket.y + 24);
+        ctx.strokeStyle = "rgba(255, 255, 255, 0.7)";
+        ctx.lineWidth = 2;
+        ctx.stroke();
+    }
+
+    function drawParticle(particle) {
+        ctx.globalAlpha = Math.max(particle.life, 0);
+
+        ctx.beginPath();
+        ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+        ctx.fillStyle = particle.color;
+        ctx.fill();
+
+        ctx.globalAlpha = 1;
+    }
+
+    function animate(timestamp) {
+        if (!startTime) {
+            startTime = timestamp;
+        }
+
+        const elapsed = timestamp - startTime;
+
+        ctx.clearRect(0, 0, width, height);
+
+        if (elapsed < duration && timestamp - lastLaunch > launchInterval) {
+            launchRocket();
+            lastLaunch = timestamp;
+        }
+
+        rockets = rockets.filter(function (rocket) {
+            rocket.x += rocket.vx;
+            rocket.y += rocket.vy;
+            rocket.vy += 0.085;
+
+            drawRocket(rocket);
+
+            if (rocket.y <= rocket.targetY || rocket.vy >= 0) {
+                explode(rocket.x, rocket.y, rocket.color);
+                return false;
+            }
+
+            return true;
+        });
+
+        particles = particles.filter(function (particle) {
+            particle.x += particle.vx;
+            particle.y += particle.vy;
+            particle.vy += 0.045;
+            particle.life -= particle.decay;
+
+            drawParticle(particle);
+
+            return particle.life > 0;
+        });
+
+        if (elapsed < duration || rockets.length > 0 || particles.length > 0) {
+            animationFrame = requestAnimationFrame(animate);
+            return;
+        }
+
+        canvas.classList.remove("fireworks-active");
+        window.removeEventListener("resize", resizeCanvas);
+
+        if (animationFrame) {
+            cancelAnimationFrame(animationFrame);
+        }
+    }
+
+    resizeCanvas();
+    window.addEventListener("resize", resizeCanvas);
+
+    canvas.classList.add("fireworks-active");
+    animationFrame = requestAnimationFrame(animate);
+}
+
+/*============================
+NAV LINK GLITCH EFFECT
+==============================*/
 
 document.addEventListener("DOMContentLoaded", function () {
     const navLinks = document.querySelectorAll(".site-nav a");
@@ -42,6 +227,10 @@ document.addEventListener("DOMContentLoaded", function () {
         }, { passive: true });
     });
 });
+
+/*============================
+LOGO GLITCH EFFECT
+==============================*/
 
 document.addEventListener("DOMContentLoaded", function () {
     const logoLink = document.querySelector(".logo");
@@ -73,10 +262,13 @@ CONTACT FORM LOGIC
 
 ==========================================*/
 
+document.addEventListener("DOMContentLoaded", function () {
+    const contactForm = document.getElementById("contactForm");
 
-const contactForm = document.getElementById("contactForm");
+    if (!contactForm) {
+        return;
+    }
 
-if (contactForm) {
     const nameInput = document.getElementById("name");
     const emailInput = document.getElementById("email");
     const phoneInput = document.getElementById("phone");
@@ -126,6 +318,7 @@ if (contactForm) {
         }
 
         const namePattern = /^[a-zA-Z\s.'-]+$/;
+
         if (!namePattern.test(value)) {
             setInvalid(nameInput, nameMessage, "Name contains invalid characters.");
             return false;
@@ -144,6 +337,7 @@ if (contactForm) {
         }
 
         const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+
         if (!emailPattern.test(value)) {
             setInvalid(emailInput, emailMessage, "Enter a valid email address.");
             return false;
@@ -262,6 +456,7 @@ if (contactForm) {
 
     phoneInput.addEventListener("input", function () {
         const cleaned = phoneInput.value.replace(/[^\d()-\s]/g, "");
+
         if (cleaned !== phoneInput.value) {
             phoneInput.value = cleaned;
         }
@@ -271,65 +466,64 @@ if (contactForm) {
         }
     });
 
-contactForm.addEventListener("submit", async function (event) {
-    event.preventDefault();
+    contactForm.addEventListener("submit", async function (event) {
+        event.preventDefault();
 
-    const isNameValid = validateName();
-    const isEmailValid = validateEmail();
-    const isPhoneValid = validatePhone();
-    const isCommentValid = validateComment();
+        const isNameValid = validateName();
+        const isEmailValid = validateEmail();
+        const isPhoneValid = validatePhone();
+        const isCommentValid = validateComment();
 
-    if (!isNameValid || !isEmailValid || !isPhoneValid || !isCommentValid) {
-        formStatus.textContent = "Please fix the highlighted fields before submitting.";
-        return;
-    }
-
-    const submitButton = contactForm.querySelector("button[type='submit']");
-
-    const formData = {
-        name: nameInput.value.trim(),
-        email: emailInput.value.trim(),
-        phone: phoneInput.value.trim(),
-        comment: commentInput.value.trim()
-    };
-
-    try {
-        submitButton.disabled = true;
-        submitButton.textContent = "Sending...";
-        formStatus.textContent = "Sending your message...";
-
-        const response = await fetch("/api/contact", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(formData)
-        });
-
-        const result = await response.json();
-
-        if (!response.ok) {
-            throw new Error(result.error || "Something went wrong. Please try again.");
+        if (!isNameValid || !isEmailValid || !isPhoneValid || !isCommentValid) {
+            formStatus.textContent = "Please fix the highlighted fields before submitting.";
+            return;
         }
 
-        contactForm.reset();
+        const submitButton = contactForm.querySelector("button[type='submit']");
 
-        clearState(nameInput, nameMessage);
-        clearState(emailInput, emailMessage);
-        clearState(phoneInput, phoneMessage);
-        clearState(commentInput, commentMessage);
+        const formData = {
+            name: nameInput.value.trim(),
+            email: emailInput.value.trim(),
+            phone: phoneInput.value.trim(),
+            comment: commentInput.value.trim()
+        };
 
-        commentCount.textContent = "0";
-        formStatus.textContent = "Message sent successfully. Glitch Wax will get back to you soon.";
-    } catch (error) {
-        formStatus.textContent = error.message || "Message could not be sent. Please try again later.";
-    } finally {
-        submitButton.disabled = false;
-        submitButton.textContent = "Send Message";
-    }
+        try {
+            submitButton.disabled = true;
+            submitButton.textContent = "Sending...";
+            formStatus.textContent = "Sending your message...";
+
+            const response = await fetch("/api/contact", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(formData)
+            });
+
+            const result = await response.json();
+
+            if (!response.ok) {
+                throw new Error(result.error || "Something went wrong. Please try again.");
+            }
+
+            contactForm.reset();
+
+            clearState(nameInput, nameMessage);
+            clearState(emailInput, emailMessage);
+            clearState(phoneInput, phoneMessage);
+            clearState(commentInput, commentMessage);
+
+            commentCount.textContent = "0";
+            formStatus.textContent = "Message sent successfully. Glitch Wax will get back to you soon.";
+        } catch (error) {
+            formStatus.textContent = error.message || "Message could not be sent. Please try again later.";
+        } finally {
+            submitButton.disabled = false;
+            submitButton.textContent = "Send Message";
+        }
+    });
 });
-}
-
 
 /*========================================
 
@@ -389,7 +583,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     // autoplay might fail silently, ignore
                 });
 
-                observer.disconnect(); // only trigger once
+                observer.disconnect();
             }
         });
     }, {
