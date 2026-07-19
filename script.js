@@ -1,204 +1,53 @@
 /*============================
-MAIN PAGE STARTUP EFFECT
-Fireworks for sale homepage, original glitch fallback
+MAIN PAGE GLITCH EFFECT
 ==============================*/
 
 document.addEventListener("DOMContentLoaded", function () {
     const heroGlitchTarget = document.querySelector(".hero-glitch-target");
-    const saleBanner = document.querySelector(".home-sale-banner");
-    const fireworksCanvas = document.getElementById("fireworks-overlay");
     const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-    if (prefersReducedMotion) {
+    if (prefersReducedMotion || !heroGlitchTarget) {
         return;
     }
 
-    if (saleBanner && fireworksCanvas) {
-        playHomepageFireworks(fireworksCanvas);
-        return;
-    }
+    let hasPlayedGlitch = false;
 
-    if (!heroGlitchTarget) {
-        return;
-    }
+    function playHeroGlitch() {
+        if (hasPlayedGlitch) {
+            return;
+        }
 
-    const hasSeenGlitch = sessionStorage.getItem("glitchPlayed");
+        hasPlayedGlitch = true;
 
-    if (!hasSeenGlitch) {
+        document.body.classList.remove("play-glitch");
+        void document.body.offsetWidth;
         document.body.classList.add("play-glitch");
-        sessionStorage.setItem("glitchPlayed", "true");
 
         window.setTimeout(function () {
             document.body.classList.remove("play-glitch");
         }, 1400);
     }
-});
 
-function playHomepageFireworks(canvas) {
-    const hasSeenFireworks = sessionStorage.getItem("fireworksPlayed");
-
-    if (hasSeenFireworks) {
+    if (!("IntersectionObserver" in window)) {
+        playHeroGlitch();
         return;
     }
 
-    sessionStorage.setItem("fireworksPlayed", "true");
-
-    const ctx = canvas.getContext("2d");
-
-    if (!ctx) {
-        return;
-    }
-
-    const duration = 2400;
-    const launchInterval = 170;
-    const colors = ["#e85f5f", "#ffffff", "#4f8dff"];
-
-    let width = window.innerWidth;
-    let height = window.innerHeight;
-    let animationFrame = null;
-    let startTime = null;
-    let lastLaunch = 0;
-    let rockets = [];
-    let particles = [];
-
-    function resizeCanvas() {
-        const pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
-
-        width = window.innerWidth;
-        height = window.innerHeight;
-
-        canvas.width = width * pixelRatio;
-        canvas.height = height * pixelRatio;
-
-        canvas.style.width = width + "px";
-        canvas.style.height = height + "px";
-
-        ctx.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
-    }
-
-    function random(min, max) {
-        return Math.random() * (max - min) + min;
-    }
-
-    function pickColor() {
-        return colors[Math.floor(Math.random() * colors.length)];
-    }
-
-    function launchRocket() {
-        rockets.push({
-            x: random(width * 0.12, width * 0.88),
-            y: height + 30,
-            targetY: random(height * 0.14, height * 0.42),
-            vx: random(-1.4, 1.4),
-            vy: random(-13, -9.5),
-            color: pickColor()
-        });
-    }
-
-    function explode(x, y, color) {
-        const particleCount = 54;
-
-        for (let i = 0; i < particleCount; i++) {
-            const angle = (Math.PI * 2 * i) / particleCount;
-            const speed = random(2.2, 6.4);
-
-            particles.push({
-                x: x,
-                y: y,
-                vx: Math.cos(angle) * speed,
-                vy: Math.sin(angle) * speed,
-                life: 1,
-                decay: random(0.014, 0.028),
-                size: random(1.5, 3.4),
-                color: color
-            });
-        }
-    }
-
-    function drawRocket(rocket) {
-        ctx.beginPath();
-        ctx.arc(rocket.x, rocket.y, 3.2, 0, Math.PI * 2);
-        ctx.fillStyle = rocket.color;
-        ctx.fill();
-
-        ctx.beginPath();
-        ctx.moveTo(rocket.x, rocket.y + 7);
-        ctx.lineTo(rocket.x - rocket.vx * 5, rocket.y + 24);
-        ctx.strokeStyle = "rgba(255, 255, 255, 0.7)";
-        ctx.lineWidth = 2;
-        ctx.stroke();
-    }
-
-    function drawParticle(particle) {
-        ctx.globalAlpha = Math.max(particle.life, 0);
-
-        ctx.beginPath();
-        ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
-        ctx.fillStyle = particle.color;
-        ctx.fill();
-
-        ctx.globalAlpha = 1;
-    }
-
-    function animate(timestamp) {
-        if (!startTime) {
-            startTime = timestamp;
-        }
-
-        const elapsed = timestamp - startTime;
-
-        ctx.clearRect(0, 0, width, height);
-
-        if (elapsed < duration && timestamp - lastLaunch > launchInterval) {
-            launchRocket();
-            lastLaunch = timestamp;
-        }
-
-        rockets = rockets.filter(function (rocket) {
-            rocket.x += rocket.vx;
-            rocket.y += rocket.vy;
-            rocket.vy += 0.085;
-
-            drawRocket(rocket);
-
-            if (rocket.y <= rocket.targetY || rocket.vy >= 0) {
-                explode(rocket.x, rocket.y, rocket.color);
-                return false;
+    const heroObserver = new IntersectionObserver(function (entries, observer) {
+        entries.forEach(function (entry) {
+            if (!entry.isIntersecting) {
+                return;
             }
 
-            return true;
+            playHeroGlitch();
+            observer.disconnect();
         });
+    }, {
+        threshold: 0.25
+    });
 
-        particles = particles.filter(function (particle) {
-            particle.x += particle.vx;
-            particle.y += particle.vy;
-            particle.vy += 0.045;
-            particle.life -= particle.decay;
-
-            drawParticle(particle);
-
-            return particle.life > 0;
-        });
-
-        if (elapsed < duration || rockets.length > 0 || particles.length > 0) {
-            animationFrame = requestAnimationFrame(animate);
-            return;
-        }
-
-        canvas.classList.remove("fireworks-active");
-        window.removeEventListener("resize", resizeCanvas);
-
-        if (animationFrame) {
-            cancelAnimationFrame(animationFrame);
-        }
-    }
-
-    resizeCanvas();
-    window.addEventListener("resize", resizeCanvas);
-
-    canvas.classList.add("fireworks-active");
-    animationFrame = requestAnimationFrame(animate);
-}
+    heroObserver.observe(heroGlitchTarget);
+});
 
 /*============================
 NAV LINK GLITCH EFFECT
@@ -580,7 +429,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 hasPlayed = true;
 
                 video.play().catch(function () {
-                    // autoplay might fail silently, ignore
+                    // Autoplay might fail silently, so ignore the error.
                 });
 
                 observer.disconnect();

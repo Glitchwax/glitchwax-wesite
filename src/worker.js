@@ -5,10 +5,6 @@ const DOUBLE_PACK_WHITE_VARIATION_ID = "ZWBSYUZ6PGFILSV5S5BZ7BFG";
 const DOUBLE_PACK_BLUE_RED_VARIATION_ID = "3BC6J4JGF7YPNFI5X7M7M3VT";
 const DOUBLE_PACK_YELLOW_VARIATION_ID = "25BFW2NOMJ3OCMXQNPCBTBM6";
 
-const STICK_O_WAX_PRICE_CENTS = 850;
-const DOUBLE_PACK_PRICE_CENTS = 1000;
-const CURRENCY = "USD";
-
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -290,7 +286,10 @@ async function handleCreateCheckout(request, env) {
     }
 
     const stickOWaxTotal = stickOWaxWhiteQty + stickOWaxBlackQty;
-    const doublePackTotal = doublePackWhiteQty + doublePackBlueRedQty + doublePackYellowQty;
+    const doublePackTotal =
+      doublePackWhiteQty +
+      doublePackBlueRedQty +
+      doublePackYellowQty;
 
     if (stickOWaxTotal === 0 && doublePackTotal === 0) {
       return Response.json(
@@ -313,41 +312,37 @@ async function handleCreateCheckout(request, env) {
       );
     }
 
-    const saleItems = [
-      {
-        catalogObjectId: STICK_O_WAX_WHITE_VARIATION_ID,
-        quantity: stickOWaxWhiteQty,
-        priceCents: STICK_O_WAX_PRICE_CENTS
-      },
-      {
-        catalogObjectId: STICK_O_WAX_BLACK_VARIATION_ID,
-        quantity: stickOWaxBlackQty,
-        priceCents: STICK_O_WAX_PRICE_CENTS
-      },
-      {
-        catalogObjectId: DOUBLE_PACK_WHITE_VARIATION_ID,
-        quantity: doublePackWhiteQty,
-        priceCents: DOUBLE_PACK_PRICE_CENTS
-      },
-      {
-        catalogObjectId: DOUBLE_PACK_BLUE_RED_VARIATION_ID,
-        quantity: doublePackBlueRedQty,
-        priceCents: DOUBLE_PACK_PRICE_CENTS
-      },
-      {
-        catalogObjectId: DOUBLE_PACK_YELLOW_VARIATION_ID,
-        quantity: doublePackYellowQty,
-        priceCents: DOUBLE_PACK_PRICE_CENTS
-      }
-    ];
-
     const lineItems = [];
 
-    saleItems.forEach((item) => {
-      addLineItem(lineItems, item.catalogObjectId, item.quantity);
-    });
+    addLineItem(
+      lineItems,
+      STICK_O_WAX_WHITE_VARIATION_ID,
+      stickOWaxWhiteQty
+    );
 
-    const b2g1DiscountCents = calculateB2G1DiscountCents(saleItems);
+    addLineItem(
+      lineItems,
+      STICK_O_WAX_BLACK_VARIATION_ID,
+      stickOWaxBlackQty
+    );
+
+    addLineItem(
+      lineItems,
+      DOUBLE_PACK_WHITE_VARIATION_ID,
+      doublePackWhiteQty
+    );
+
+    addLineItem(
+      lineItems,
+      DOUBLE_PACK_BLUE_RED_VARIATION_ID,
+      doublePackBlueRedQty
+    );
+
+    addLineItem(
+      lineItems,
+      DOUBLE_PACK_YELLOW_VARIATION_ID,
+      doublePackYellowQty
+    );
 
     const order = {
       location_id: env.SQUARE_LOCATION_ID,
@@ -356,21 +351,6 @@ async function handleCreateCheckout(request, env) {
         auto_apply_taxes: true
       }
     };
-
-    if (b2g1DiscountCents > 0) {
-      order.discounts = [
-        {
-          uid: "july4-b2g1",
-          name: "July 4 Sale - Buy 2 Get 1 Free",
-          type: "FIXED_AMOUNT",
-          scope: "ORDER",
-          amount_money: {
-            amount: b2g1DiscountCents,
-            currency: CURRENCY
-          }
-        }
-      ];
-    }
 
     const squareBaseUrl =
       env.SQUARE_ENVIRONMENT === "production"
@@ -421,7 +401,11 @@ async function handleCreateCheckout(request, env) {
       );
     }
 
-    if (!squareData || !squareData.payment_link || !squareData.payment_link.url) {
+    if (
+      !squareData ||
+      !squareData.payment_link ||
+      !squareData.payment_link.url
+    ) {
       console.error("Square checkout response missing payment link.", {
         response: squareData || squareResponseText
       });
@@ -468,26 +452,4 @@ function addLineItem(lineItems, catalogObjectId, quantity) {
       quantity: String(quantity)
     });
   }
-}
-
-function calculateB2G1DiscountCents(items) {
-  const unitPrices = [];
-
-  items.forEach((item) => {
-    for (let i = 0; i < item.quantity; i++) {
-      unitPrices.push(item.priceCents);
-    }
-  });
-
-  if (unitPrices.length < 3) {
-    return 0;
-  }
-
-  unitPrices.sort((a, b) => a - b);
-
-  const freeItemCount = Math.floor(unitPrices.length / 3);
-
-  return unitPrices
-    .slice(0, freeItemCount)
-    .reduce((total, priceCents) => total + priceCents, 0);
 }
