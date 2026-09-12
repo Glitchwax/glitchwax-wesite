@@ -13,7 +13,10 @@
     "SQUARE_ENVIRONMENT": "production",
     "SQUARE_LOCATION_ID": "LPA9XDRHBBB1Q",
     "CONTACT_FROM_EMAIL": "contact@glitchwax.com",
-    "CONTACT_TO_EMAIL": "glitchwax.main@gmail.com"
+    "CONTACT_TO_EMAIL": "glitchwax.main@gmail.com",
+    "SHIPPING_FEE_CENTS": "595",
+    "SUPABASE_URL": "https://sjawcftheiebuwqskois.supabase.co",
+    "SUPABASE_ANON_KEY": "sb_publishable_mEO1df2hZL4pSr8CHI5vVg_DE5peI71"
   },
   "send_email": [
     {

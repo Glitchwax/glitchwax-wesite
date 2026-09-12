@@ -5,21 +5,213 @@ const DOUBLE_PACK_WHITE_VARIATION_ID = "ZWBSYUZ6PGFILSV5S5BZ7BFG";
 const DOUBLE_PACK_BLUE_RED_VARIATION_ID = "3BC6J4JGF7YPNFI5X7M7M3VT";
 const DOUBLE_PACK_YELLOW_VARIATION_ID = "25BFW2NOMJ3OCMXQNPCBTBM6";
 
+// Attribution + first-party analytics (2026-09-12).
+//
+// ?ref=<code> on ANY inbound link (a rider's handle, a campaign code) is kept
+// in a first-party cookie for 30 days and carried into the Square order as
+// reference_id, so the dashboard can credit the sale. Every HTML page view and
+// every checkout start is also recorded server-side into Supabase
+// (site_visits, insert-only publishable key) — no client script, no third-party
+// tag, no consent banner. If Supabase is unreachable the page still serves;
+// logging never blocks or fails a request.
+const REF_COOKIE = "gw_ref";
+const REF_MAX_AGE_SECONDS = 60 * 60 * 24 * 30;
+const REF_PATTERN = /^[a-z0-9_.-]{1,40}$/;
+
 export default {
-  async fetch(request, env) {
+  async fetch(request, env, ctx) {
     const url = new URL(request.url);
 
     if (url.pathname === "/api/create-checkout") {
-      return handleCreateCheckout(request, env);
+      return handleCreateCheckout(request, env, ctx);
     }
 
     if (url.pathname === "/api/contact") {
       return handleContactForm(request, env);
     }
 
-    return env.ASSETS.fetch(request);
+    const response = await env.ASSETS.fetch(request);
+
+    if (!isHtmlNavigation(request, response)) {
+      return response;
+    }
+
+    const ref = sanitizeRef(url.searchParams.get("ref"));
+
+    ctx.waitUntil(logPageView(request, env, url, ref));
+
+    if (!ref) {
+      return response;
+    }
+
+    const withCookie = new Response(response.body, response);
+    withCookie.headers.append(
+      "Set-Cookie",
+      `${REF_COOKIE}=${ref}; Max-Age=${REF_MAX_AGE_SECONDS}; Path=/; SameSite=Lax; Secure`
+    );
+    return withCookie;
   }
 };
+
+function sanitizeRef(value) {
+  if (typeof value !== "string") {
+    return null;
+  }
+
+  const cleaned = value.trim().replace(/^@/, "").toLowerCase();
+
+  return REF_PATTERN.test(cleaned) ? cleaned : null;
+}
+
+function readCookie(request, name) {
+  const header = request.headers.get("Cookie") || "";
+
+  for (const part of header.split(";")) {
+    const [key, ...rest] = part.trim().split("=");
+
+    if (key === name) {
+      return rest.join("=");
+    }
+  }
+
+  return null;
+}
+
+// Only top-level HTML navigations count as a visit — not asset fetches, not
+// prefetches, not API calls.
+function isHtmlNavigation(request, response) {
+  if (request.method !== "GET" || !response.ok) {
+    return false;
+  }
+
+  const contentType = response.headers.get("Content-Type") || "";
+
+  if (!contentType.includes("text/html")) {
+    return false;
+  }
+
+  const dest = request.headers.get("Sec-Fetch-Dest");
+
+  return !dest || dest === "document";
+}
+
+const BOT_PATTERN =
+  /bot|crawl|spider|slurp|preview|fetch|headless|python|curl|wget|lighthouse|pingdom|monitor|facebookexternalhit|whatsapp|telegram|discord|skype|embedly|quora|outbrain|pinterest|vkshare|w3c_validator|apache-httpclient|okhttp|go-http-client|java\//i;
+
+function classifyDevice(userAgent) {
+  if (!userAgent) {
+    return "other";
+  }
+
+  if (/mobile|iphone|ipod|android.*mobile|windows phone|blackberry/i.test(userAgent)) {
+    return "mobile";
+  }
+
+  if (/ipad|android|tablet|macintosh|windows nt|x11|linux|cros/i.test(userAgent)) {
+    return "desktop";
+  }
+
+  return "other";
+}
+
+// Salted daily hash of IP + user agent: lets the dashboard count unique
+// visitors per day without storing either value, and cannot be reversed.
+async function visitorHash(request, env) {
+  const ip = request.headers.get("CF-Connecting-IP") || "";
+  const userAgent = request.headers.get("User-Agent") || "";
+  const day = new Date().toISOString().slice(0, 10);
+  // An existing Worker secret doubles as the salt: it is never stored, only
+  // hashed, and SHA-256 output cannot be turned back into it.
+  const salt = env.VISITOR_SALT || env.SQUARE_ACCESS_TOKEN || "glitchwax";
+
+  const data = new TextEncoder().encode(`${salt}|${day}|${ip}|${userAgent}`);
+  const digest = await crypto.subtle.digest("SHA-256", data);
+
+  return Array.from(new Uint8Array(digest))
+    .map((byte) => byte.toString(16).padStart(2, "0"))
+    .join("")
+    .slice(0, 32);
+}
+
+function clip(value, maxLength) {
+  if (typeof value !== "string" || !value) {
+    return null;
+  }
+
+  return value.slice(0, maxLength);
+}
+
+function referrerHost(referrer) {
+  if (!referrer) {
+    return null;
+  }
+
+  try {
+    const host = new URL(referrer).hostname.replace(/^www\./, "");
+
+    return host === "glitchwax.com" ? null : host;
+  } catch (error) {
+    return null;
+  }
+}
+
+function normalizePath(pathname) {
+  const path = pathname.replace(/\.html$/, "").replace(/\/index$/, "/");
+
+  return path || "/";
+}
+
+async function logPageView(request, env, url, ref) {
+  const userAgent = request.headers.get("User-Agent") || "";
+  const referrer = request.headers.get("Referer") || "";
+  const params = url.searchParams;
+
+  return logVisit(env, {
+    kind: "pageview",
+    path: clip(normalizePath(url.pathname), 200),
+    referrer_host: referrerHost(referrer),
+    referrer: clip(referrer, 500),
+    utm_source: clip(params.get("utm_source"), 100),
+    utm_medium: clip(params.get("utm_medium"), 100),
+    utm_campaign: clip(params.get("utm_campaign"), 100),
+    utm_content: clip(params.get("utm_content"), 100),
+    ref: ref || sanitizeRef(readCookie(request, REF_COOKIE)),
+    country: clip(request.cf && request.cf.country, 2),
+    device: classifyDevice(userAgent),
+    is_bot: BOT_PATTERN.test(userAgent),
+    visitor_hash: await visitorHash(request, env)
+  });
+}
+
+async function logVisit(env, row) {
+  if (!env.SUPABASE_URL || !env.SUPABASE_ANON_KEY) {
+    return;
+  }
+
+  try {
+    const response = await fetch(`${env.SUPABASE_URL}/rest/v1/site_visits`, {
+      method: "POST",
+      headers: {
+        apikey: env.SUPABASE_ANON_KEY,
+        Authorization: `Bearer ${env.SUPABASE_ANON_KEY}`,
+        "Content-Type": "application/json",
+        Prefer: "return=minimal"
+      },
+      body: JSON.stringify(row)
+    });
+
+    if (!response.ok) {
+      console.error("site_visits insert failed.", {
+        status: response.status,
+        body: (await response.text()).slice(0, 300)
+      });
+    }
+  } catch (error) {
+    console.error("site_visits insert error.", {
+      message: error.message
+    });
+  }
+}
 
 async function handleContactForm(request, env) {
   if (request.method !== "POST") {
@@ -252,7 +444,7 @@ function cleanText(value, maxLength) {
     .slice(0, maxLength);
 }
 
-async function handleCreateCheckout(request, env) {
+async function handleCreateCheckout(request, env, ctx) {
   if (request.method !== "POST") {
     return Response.json(
       { error: "Method not allowed." },
@@ -344,6 +536,12 @@ async function handleCreateCheckout(request, env) {
       doublePackYellowQty
     );
 
+    // Attribution: the ref code the buyer arrived with (cookie set by the
+    // page handler, or sent explicitly by the store page). Square keeps it as
+    // the order's reference_id, which the dashboard sync already captures.
+    const ref =
+      sanitizeRef(body.ref) || sanitizeRef(readCookie(request, REF_COOKIE));
+
     const order = {
       location_id: env.SQUARE_LOCATION_ID,
       line_items: lineItems,
@@ -352,18 +550,39 @@ async function handleCreateCheckout(request, env) {
       }
     };
 
+    if (ref) {
+      order.reference_id = ref;
+    }
+
     const squareBaseUrl =
       env.SQUARE_ENVIRONMENT === "production"
         ? "https://connect.squareup.com"
         : "https://connect.squareupsandbox.com";
 
+    const checkoutOptions = {
+      ask_for_shipping_address: true,
+      redirect_url: "https://glitchwax.com/order-success.html"
+    };
+
+    // Flat shipping charged to the customer, in cents, from wrangler.jsonc
+    // (SHIPPING_FEE_CENTS). Set explicitly here so the rate is decided in one
+    // place and cannot drift below what carriers actually charge us.
+    const shippingFeeCents = Number.parseInt(env.SHIPPING_FEE_CENTS || "0", 10);
+
+    if (Number.isInteger(shippingFeeCents) && shippingFeeCents > 0) {
+      checkoutOptions.shipping_fee = {
+        name: "Shipping",
+        charge: {
+          amount: shippingFeeCents,
+          currency: "USD"
+        }
+      };
+    }
+
     const squareRequestBody = {
       idempotency_key: crypto.randomUUID(),
       order,
-      checkout_options: {
-        ask_for_shipping_address: true,
-        redirect_url: "https://glitchwax.com/order-success.html"
-      }
+      checkout_options: checkoutOptions
     };
 
     const squareResponse = await fetch(
@@ -415,6 +634,31 @@ async function handleCreateCheckout(request, env) {
         { status: 500 }
       );
     }
+
+    const cartSummary = [
+      [stickOWaxTotal, "Stick O Wax"],
+      [doublePackTotal, "Two Pack"]
+    ]
+      .filter(([quantity]) => quantity > 0)
+      .map(([quantity, name]) => `${quantity}x ${name}`)
+      .join(" + ");
+
+    ctx.waitUntil(
+      (async () =>
+        logVisit(env, {
+          kind: "checkout_start",
+          path: "/api/create-checkout",
+          ref,
+          country: clip(request.cf && request.cf.country, 2),
+          device: classifyDevice(request.headers.get("User-Agent") || ""),
+          is_bot: false,
+          visitor_hash: await visitorHash(request, env),
+          detail: {
+            items: cartSummary,
+            subtotal: stickOWaxTotal * 8.5 + doublePackTotal * 10
+          }
+        }))()
+    );
 
     return Response.json({
       checkoutUrl: squareData.payment_link.url

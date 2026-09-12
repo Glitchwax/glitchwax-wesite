@@ -374,7 +374,8 @@ SQUARE THEN PROCESSES THE ORDER, VERIFIES PRICING, AND GENERATES A SECURE CHECK 
             stickOWaxBlackQty: stickBlackQty,
             doublePackWhiteQty: twoPackWhiteQty,
             doublePackBlueRedQty: twoPackBlueRedQty,
-            doublePackYellowQty: twoPackYellowQty
+            doublePackYellowQty: twoPackYellowQty,
+            ref: new URLSearchParams(window.location.search).get('ref')
           })
         });
 
