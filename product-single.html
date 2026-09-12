@@ -188,6 +188,29 @@ IT ALSO LINKS TO THE ORDER PAGE, ALLOWING USERS TO IMMEDIATLEY PURCHASE THE PROD
         </section>
     </main>
 
+    <section class="signup" aria-labelledby="signupHeading">
+        <div class="container signup-inner">
+            <div class="signup-copy">
+                <p class="section-label">Stay in the loop</p>
+                <h2 id="signupHeading">Drops, restocks, rider clips.</h2>
+                <p>No spam. Unsubscribe anytime.</p>
+            </div>
+            <form id="signupForm" class="signup-form" novalidate>
+                <div class="signup-fields">
+                    <input type="email" name="email" id="signupEmail" placeholder="you@email.com" autocomplete="email" required>
+                    <input type="tel" name="phone" id="signupPhone" placeholder="Phone (optional, US)" autocomplete="tel">
+                    <button type="submit" class="button button-primary">Sign up</button>
+                </div>
+                <label class="signup-consent">
+                    <input type="checkbox" name="smsConsent" id="signupSms">
+                    <span>Text me too. Msg &amp; data rates may apply. Reply STOP to opt out.</span>
+                </label>
+                <input type="text" name="website" class="signup-hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+                <p class="field-message" id="signupStatus" role="status"></p>
+            </form>
+        </div>
+    </section>
+
     <footer class="site-footer">
         <div class="container footer-inner">
             <p>&copy; 2026 Glitch Wax. All rights reserved.</p>

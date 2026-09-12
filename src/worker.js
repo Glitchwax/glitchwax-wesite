@@ -30,6 +30,14 @@ export default {
       return handleContactForm(request, env);
     }
 
+    if (url.pathname === "/api/subscribe") {
+      return handleSubscribe(request, env);
+    }
+
+    if (url.pathname === "/api/square-webhook") {
+      return handleSquareWebhook(request, env, ctx);
+    }
+
     const response = await env.ASSETS.fetch(request);
 
     if (!isHtmlNavigation(request, response)) {
@@ -696,4 +704,301 @@ function addLineItem(lineItems, catalogObjectId, quantity) {
       quantity: String(quantity)
     });
   }
+}
+
+// ---------------------------------------------------------------------------
+// Email / SMS signup (biz-3). Inserts into Supabase `subscribers` with the
+// publishable key under an insert-only policy (glitch-brain migration 041).
+// Email is required, phone optional; the SMS box is real consent and is the
+// only way sms_consent becomes true.
+// ---------------------------------------------------------------------------
+async function handleSubscribe(request, env) {
+  if (request.method !== "POST") {
+    return Response.json({ error: "Method not allowed." }, { status: 405 });
+  }
+
+  if (!env.SUPABASE_URL || !env.SUPABASE_ANON_KEY) {
+    return Response.json({ error: "Signup is not configured yet." }, { status: 500 });
+  }
+
+  let body;
+
+  try {
+    body = await request.json();
+  } catch (error) {
+    return Response.json({ error: "Invalid submission." }, { status: 400 });
+  }
+
+  if (!body || typeof body !== "object") {
+    return Response.json({ error: "Invalid submission." }, { status: 400 });
+  }
+
+  // Honeypot: real people never fill a field they cannot see.
+  if (cleanText(body.website, 10)) {
+    return Response.json({ success: true, message: "You're on the list." });
+  }
+
+  const email = cleanText(body.email, 254).toLowerCase();
+  const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+
+  if (!email || !emailPattern.test(email)) {
+    return Response.json({ error: "Enter a valid email address." }, { status: 400 });
+  }
+
+  const rawPhone = cleanText(body.phone, 24);
+  const phone = normalizeUsPhone(rawPhone);
+
+  if (rawPhone && !phone) {
+    return Response.json(
+      { error: "Enter a valid 10-digit US phone number, or leave it blank." },
+      { status: 400 }
+    );
+  }
+
+  const smsConsent = body.smsConsent === true && Boolean(phone);
+  const url = new URL(request.url);
+  const referer = request.headers.get("Referer") || "";
+  let sourcePath = null;
+  let utmSource = null;
+  let utmCampaign = null;
+
+  try {
+    const from = new URL(referer);
+    sourcePath = clip(normalizePath(from.pathname), 200);
+    utmSource = clip(from.searchParams.get("utm_source"), 100);
+    utmCampaign = clip(from.searchParams.get("utm_campaign"), 100);
+  } catch (error) {
+    sourcePath = clip(normalizePath(url.pathname), 200);
+  }
+
+  const row = {
+    email,
+    phone,
+    sms_consent: smsConsent,
+    sms_consent_at: smsConsent ? new Date().toISOString() : null,
+    source_path: sourcePath,
+    ref: sanitizeRef(body.ref) || sanitizeRef(readCookie(request, REF_COOKIE)),
+    utm_source: utmSource,
+    utm_campaign: utmCampaign,
+    country: clip(request.cf && request.cf.country, 2)
+  };
+
+  try {
+    const response = await fetch(`${env.SUPABASE_URL}/rest/v1/subscribers`, {
+      method: "POST",
+      headers: {
+        apikey: env.SUPABASE_ANON_KEY,
+        Authorization: `Bearer ${env.SUPABASE_ANON_KEY}`,
+        "Content-Type": "application/json",
+        Prefer: "return=minimal"
+      },
+      body: JSON.stringify(row)
+    });
+
+    // 409 = the unique index on email/phone: they are already on the list.
+    if (response.status === 409) {
+      return Response.json({ success: true, message: "You're already on the list." });
+    }
+
+    if (!response.ok) {
+      console.error("subscribers insert failed.", {
+        status: response.status,
+        body: (await response.text()).slice(0, 300)
+      });
+
+      return Response.json({ error: "Signup didn't go through. Please try again." }, { status: 500 });
+    }
+
+    return Response.json({
+      success: true,
+      message: smsConsent ? "You're in. Watch your inbox and your texts." : "You're in. Watch your inbox."
+    });
+  } catch (error) {
+    console.error("subscribers insert error.", { message: error.message });
+
+    return Response.json({ error: "Signup didn't go through. Please try again." }, { status: 500 });
+  }
+}
+
+/** "(612) 555-0134" / "612-555-0134" / "+1 612 555 0134" -> "+16125550134", else null. */
+function normalizeUsPhone(value) {
+  if (!value) {
+    return null;
+  }
+
+  let digits = value.replace(/\D/g, "");
+
+  if (digits.length === 11 && digits.startsWith("1")) {
+    digits = digits.slice(1);
+  }
+
+  if (
+    digits.length !== 10 ||
+    digits[0] === "0" ||
+    digits[0] === "1" ||
+    digits[3] === "0" ||
+    digits[3] === "1"
+  ) {
+    return null;
+  }
+
+  if (/^(\d)\1+$/.test(digits)) {
+    return null;
+  }
+
+  return `+1${digits}`;
+}
+
+// ---------------------------------------------------------------------------
+// Square webhook -> instant order text. Square POSTs payment events here;
+// we verify its HMAC signature, look the order up, and hand a one-line
+// notification to the relay on the apply project, which inserts it into
+// notification_events (glitch-brain migrations 037 + 042) and sends it. The
+// nightly sync later sees the same order and skips it by dedupe_key.
+//
+// Secrets (set with `npx wrangler secret put ...` from Git Bash):
+//   SQUARE_WEBHOOK_SIGNATURE_KEY - from the Square Developer Dashboard
+//                                  webhook subscription for this URL
+//   NOTIFY_RELAY_SECRET          - notification_settings.relay_secret,
+//                                  shown on the dashboard's Notifications page
+// ---------------------------------------------------------------------------
+const NOTIFY_RELAY_URL = "https://glitchwax-apply.pages.dev/api/notify";
+
+async function handleSquareWebhook(request, env, ctx) {
+  if (request.method !== "POST") {
+    return Response.json({ error: "Method not allowed." }, { status: 405 });
+  }
+
+  if (!env.SQUARE_WEBHOOK_SIGNATURE_KEY) {
+    console.error("Square webhook received but SQUARE_WEBHOOK_SIGNATURE_KEY is not set.");
+    return Response.json({ error: "Webhook not configured." }, { status: 503 });
+  }
+
+  const rawBody = await request.text();
+  const notificationUrl =
+    env.SQUARE_WEBHOOK_URL || `https://glitchwax.com${new URL(request.url).pathname}`;
+  const expected = await hmacSha256Base64(env.SQUARE_WEBHOOK_SIGNATURE_KEY, notificationUrl + rawBody);
+  const given = request.headers.get("x-square-hmacsha256-signature") || "";
+
+  if (!constantTimeEqual(expected, given)) {
+    console.error("Square webhook signature mismatch.", { notificationUrl });
+    return Response.json({ error: "Bad signature." }, { status: 401 });
+  }
+
+  let event;
+
+  try {
+    event = JSON.parse(rawBody);
+  } catch (error) {
+    return Response.json({ error: "Invalid JSON." }, { status: 400 });
+  }
+
+  const payment = event && event.data && event.data.object && event.data.object.payment;
+  const completed =
+    event.type === "payment.completed" ||
+    (event.type === "payment.updated" && payment && payment.status === "COMPLETED");
+
+  if (!completed || !payment || !payment.order_id) {
+    return Response.json({ ok: true, ignored: event.type });
+  }
+
+  // Acknowledge fast (Square retries anything slow or non-2xx); do the work after.
+  ctx.waitUntil(announceOrder(env, payment.order_id, payment.id));
+
+  return Response.json({ ok: true });
+}
+
+async function announceOrder(env, orderId, paymentId) {
+  if (!env.NOTIFY_RELAY_SECRET) {
+    console.error("Order webhook: NOTIFY_RELAY_SECRET is not set; nothing sent.", { orderId });
+    return;
+  }
+
+  try {
+    const squareBaseUrl =
+      env.SQUARE_ENVIRONMENT === "production"
+        ? "https://connect.squareup.com"
+        : "https://connect.squareupsandbox.com";
+
+    const orderResponse = await fetch(`${squareBaseUrl}/v2/orders/${orderId}`, {
+      headers: {
+        Authorization: `Bearer ${env.SQUARE_ACCESS_TOKEN}`,
+        "Square-Version": "2025-04-16"
+      }
+    });
+
+    const orderData = await orderResponse.json();
+    const order = (orderData && orderData.order) || {};
+    const total = Number((order.total_money && order.total_money.amount) || 0) / 100;
+    const items = (order.line_items || [])
+      .map((line) => `${line.quantity}x ${line.name || "item"}`)
+      .join(" + ");
+    const fulfillment = (order.fulfillments || [])[0];
+    const recipient =
+      fulfillment && fulfillment.shipment_details && fulfillment.shipment_details.recipient;
+    const shipping =
+      (order.service_charges || [])
+        .filter((charge) => /ship/i.test(charge.name || ""))
+        .reduce((sum, charge) => sum + Number((charge.total_money && charge.total_money.amount) || 0), 0) /
+      100;
+
+    const bodyParts = [
+      items,
+      recipient && recipient.display_name,
+      shipping > 0 ? `shipping $${shipping.toFixed(2)}` : null,
+      order.reference_id ? `ref ${order.reference_id}` : null
+    ].filter(Boolean);
+
+    const relayResponse = await fetch(env.NOTIFY_RELAY_URL || NOTIFY_RELAY_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-notify-secret": env.NOTIFY_RELAY_SECRET
+      },
+      body: JSON.stringify({
+        kind: "order",
+        title: `New order $${total.toFixed(2)}`,
+        body: bodyParts.join(" - "),
+        dedupe_key: `order:${orderId}`,
+        source_table: "square_webhook",
+        source_id: paymentId || orderId
+      })
+    });
+
+    if (!relayResponse.ok) {
+      console.error("Order webhook: relay refused.", {
+        status: relayResponse.status,
+        body: (await relayResponse.text()).slice(0, 300)
+      });
+    }
+  } catch (error) {
+    console.error("Order webhook error.", { orderId, message: error.message });
+  }
+}
+
+async function hmacSha256Base64(secret, message) {
+  const key = await crypto.subtle.importKey(
+    "raw",
+    new TextEncoder().encode(secret),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"]
+  );
+  const signature = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(message));
+
+  return btoa(String.fromCharCode(...new Uint8Array(signature)));
+}
+
+function constantTimeEqual(a, b) {
+  if (typeof a !== "string" || typeof b !== "string" || a.length !== b.length) {
+    return false;
+  }
+
+  let diff = 0;
+
+  for (let i = 0; i < a.length; i++) {
+    diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  }
+
+  return diff === 0;
 }

@@ -441,3 +441,80 @@ document.addEventListener("DOMContentLoaded", function () {
 
     observer.observe(video);
 });
+
+/*========================================
+
+EMAIL / SMS SIGNUP (every page)
+
+==========================================*/
+
+document.addEventListener("DOMContentLoaded", function () {
+    var form = document.getElementById("signupForm");
+
+    if (!form) {
+        return;
+    }
+
+    var emailInput = document.getElementById("signupEmail");
+    var phoneInput = document.getElementById("signupPhone");
+    var smsInput = document.getElementById("signupSms");
+    var status = document.getElementById("signupStatus");
+    var button = form.querySelector("button[type='submit']");
+
+    function say(message, ok) {
+        status.textContent = message;
+        status.classList.toggle("field-valid", Boolean(ok));
+    }
+
+    form.addEventListener("submit", async function (event) {
+        event.preventDefault();
+
+        var email = emailInput.value.trim();
+        var phone = phoneInput.value.trim();
+
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) {
+            emailInput.classList.add("input-error");
+            say("Enter a valid email address.", false);
+            return;
+        }
+
+        emailInput.classList.remove("input-error");
+
+        if (smsInput.checked && !phone) {
+            phoneInput.classList.add("input-error");
+            say("Add your phone number to get texts, or untick the box.", false);
+            return;
+        }
+
+        phoneInput.classList.remove("input-error");
+        button.disabled = true;
+        say("Signing you up...", false);
+
+        try {
+            var response = await fetch("/api/subscribe", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    email: email,
+                    phone: phone,
+                    smsConsent: smsInput.checked,
+                    website: form.querySelector(".signup-hp").value,
+                    ref: new URLSearchParams(window.location.search).get("ref")
+                })
+            });
+
+            var result = await response.json();
+
+            if (!response.ok) {
+                throw new Error(result.error || "Signup didn't go through. Please try again.");
+            }
+
+            form.reset();
+            say(result.message || "You're in.", true);
+        } catch (error) {
+            say(error.message || "Signup didn't go through. Please try again.", false);
+        } finally {
+            button.disabled = false;
+        }
+    });
+});

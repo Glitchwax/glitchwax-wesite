@@ -1672,3 +1672,95 @@ CONTACT PAGE BUTTON STYLING AND EFFECTS
 .product-warning-section p:last-child {
     margin-bottom: 0;
 }
+
+/* =========================
+   EMAIL / SMS SIGNUP
+========================= */
+
+.signup {
+    border-top: 1px solid var(--color-border);
+    background: var(--color-surface);
+    padding: 44px 0;
+}
+
+.signup-inner {
+    display: grid;
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.4fr);
+    gap: 28px;
+    align-items: center;
+}
+
+.signup-copy h2 {
+    margin: 0.35rem 0 0.5rem;
+    font-size: clamp(1.4rem, 2.6vw, 2rem);
+}
+
+.signup-copy p:last-child {
+    margin: 0;
+    color: var(--color-text-muted);
+}
+
+.signup-form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.7rem;
+}
+
+.signup-fields {
+    display: grid;
+    grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) auto;
+    gap: 0.6rem;
+}
+
+.signup-fields input {
+    width: 100%;
+    padding: 0.9rem 1rem;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--color-white);
+    font: inherit;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.signup-fields input::placeholder {
+    color: rgba(255, 255, 255, 0.45);
+}
+
+.signup-fields input:focus {
+    outline: none;
+    border-color: rgba(255, 255, 255, 0.35);
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.08);
+}
+
+.signup-consent {
+    display: flex;
+    gap: 0.6rem;
+    align-items: flex-start;
+    font-size: 0.86rem;
+    color: var(--color-text-muted);
+    cursor: pointer;
+}
+
+.signup-consent input {
+    margin-top: 0.2rem;
+    accent-color: var(--color-primary);
+}
+
+.signup-hp {
+    position: absolute;
+    left: -9999px;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+}
+
+@media (max-width: 820px) {
+    .signup-inner {
+        grid-template-columns: 1fr;
+    }
+
+    .signup-fields {
+        grid-template-columns: 1fr;
+    }
+}
