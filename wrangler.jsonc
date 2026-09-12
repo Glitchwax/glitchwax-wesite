@@ -7,7 +7,15 @@
     "enabled": true
   },
   "assets": {
-    "directory": "."
+    "directory": ".",
+    // Without a binding, env.ASSETS was undefined and every unknown URL
+    // answered "error 1101" instead of 404 (pre-existing). With assets
+    // configured, matching requests are served BEFORE the Worker runs, so
+    // page views never reached the logging / ?ref= cookie code either.
+    // run_worker_first routes everything through the Worker, which then
+    // serves the asset via env.ASSETS.fetch.
+    "binding": "ASSETS",
+    "run_worker_first": true
   },
   "vars": {
     "SQUARE_ENVIRONMENT": "production",
