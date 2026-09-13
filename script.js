@@ -534,10 +534,13 @@ document.addEventListener("DOMContentLoaded", function () {
 
     const params = new URLSearchParams(window.location.search);
 
+    const reviewHeading = document.getElementById("reviewHeading");
+    const reviewIntro = document.getElementById("reviewIntro");
     const ratingRow = document.getElementById("ratingRow");
     const ratingLegend = document.getElementById("ratingLegend");
     const ratingMessage = document.getElementById("ratingMessage");
-    const productInput = document.getElementById("product");
+    const waxMeter = reviewForm.querySelector(".wax-meter");
+    const meterLabels = Array.from(waxMeter.querySelectorAll("label"));
     const messageInput = document.getElementById("message");
     const messageLabel = document.getElementById("messageLabel");
     const messageMessage = document.getElementById("messageMessage");
@@ -556,8 +559,8 @@ document.addEventListener("DOMContentLoaded", function () {
     const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
     const maxMessageLength = 2000;
 
-    // The order-success page links here with ?order=<Square order id>; the
-    // packaging QR code links with ?src=qr.
+    // The order-success page links here with ?order=<Square order id>, the
+    // packaging QR code with ?src=qr, and a product page can pass ?product=.
     const prefilledOrder = params.get("order") || params.get("orderId") || "";
     const source = ["order_success", "qr"].includes(params.get("src")) ? params.get("src") : "site_review";
 
@@ -565,30 +568,52 @@ document.addEventListener("DOMContentLoaded", function () {
         orderInput.value = prefilledOrder.slice(0, 64);
     }
 
-    const productParam = params.get("product");
+    function selectProduct(value) {
+        const match = Array.from(reviewForm.querySelectorAll("input[name='product']")).find(function (input) {
+            return input.value === value;
+        });
 
-    if (productParam && Array.from(productInput.options).some(function (option) { return option.value === productParam; })) {
-        productInput.value = productParam;
+        if (match) {
+            match.checked = true;
+        }
+    }
+
+    selectProduct(params.get("product"));
+
+    if (["complaint", "question"].includes(params.get("kind"))) {
+        reviewForm.querySelector("input[name='kind'][value='" + params.get("kind") + "']").checked = true;
     }
 
     const copyByKind = {
         review: {
-            legend: "Your rating",
-            message: "Your review",
-            placeholder: "How does it grind? What did you wax?",
-            button: "Send Review"
+            heading: "Rate Your Wax",
+            intro: "Pick the wax you rode, give it a score, and let other skaters know what they are getting.",
+            legend: "How did it slide?",
+            message: "What did you wax?",
+            placeholder: "The spot, the trick, how long it lasted.",
+            email: "Email <span class=\"optional-tag\">(optional)</span>",
+            button: "Send Review",
+            thanks: "Review received. Thanks for riding Glitch Wax."
         },
         complaint: {
-            legend: "Rating (optional)",
-            message: "What went wrong?",
-            placeholder: "Tell us what happened and we'll make it right.",
-            button: "Send to the Team"
+            heading: "Order Problem",
+            intro: "Wrong item, busted in shipping, or it just didn't hold up? Tell us what happened and we will make it right.",
+            legend: "How did it slide? (optional)",
+            message: "What happened?",
+            placeholder: "What you ordered, what showed up, and what went wrong.",
+            email: "Email <span class=\"optional-tag\">(so we can get back to you)</span>",
+            button: "Send To Glitch Wax",
+            thanks: "Got it. Someone from Glitch Wax will reach out."
         },
         question: {
-            legend: "Rating",
+            heading: "Ask Us Anything",
+            intro: "Which wax for which spot, how to apply it, wholesale, anything. Ask and we will answer.",
+            legend: "",
             message: "Your question",
             placeholder: "Ask away.",
-            button: "Send Question"
+            email: "Email <span class=\"optional-tag\">(so we can get back to you)</span>",
+            button: "Send Question",
+            thanks: "Question received. We will get back to you soon."
         }
     };
 
@@ -600,6 +625,11 @@ document.addEventListener("DOMContentLoaded", function () {
     function currentRating() {
         const checked = reviewForm.querySelector("input[name='rating']:checked");
         return checked ? Number(checked.value) : null;
+    }
+
+    function currentProduct() {
+        const checked = reviewForm.querySelector("input[name='product']:checked");
+        return checked ? checked.value : "";
     }
 
     function setInvalid(input, messageElement, message) {
@@ -617,33 +647,65 @@ document.addEventListener("DOMContentLoaded", function () {
         messageElement.textContent = "";
     }
 
-    function applyKind() {
-        const kind = currentKind();
-        const copy = copyByKind[kind];
+    /* Wax meter: bars fill up to the picked score, and preview on hover. */
+    function paintMeter() {
+        const rating = currentRating();
 
-        ratingRow.hidden = kind === "question";
-        publicOkRow.hidden = kind !== "review";
-        ratingLegend.textContent = copy.legend;
-        messageLabel.textContent = copy.message;
-        messageInput.placeholder = copy.placeholder;
-        submitButton.textContent = copy.button;
-        emailLabel.innerHTML = kind === "review"
-            ? "Email <span class=\"optional-tag\">(optional)</span>"
-            : "Email <span class=\"optional-tag\">(so we can reply)</span>";
+        waxMeter.classList.toggle("is-set", rating !== null);
 
-        clearState(null, ratingMessage);
-        clearState(messageInput, messageMessage);
-        clearState(emailInput, emailMessage);
+        meterLabels.forEach(function (label, index) {
+            label.classList.toggle("is-on", rating !== null && index < rating);
+            label.classList.toggle("is-picked", rating !== null && index === rating - 1);
+        });
     }
 
-    reviewForm.querySelectorAll("input[name='kind']").forEach(function (input) {
-        input.addEventListener("change", applyKind);
+    meterLabels.forEach(function (label, index) {
+        label.addEventListener("mouseenter", function () {
+            waxMeter.classList.add("is-previewing");
+
+            meterLabels.forEach(function (other, otherIndex) {
+                other.classList.toggle("is-preview", otherIndex <= index);
+            });
+        });
+    });
+
+    waxMeter.addEventListener("mouseleave", function () {
+        waxMeter.classList.remove("is-previewing");
+
+        meterLabels.forEach(function (label) {
+            label.classList.remove("is-preview");
+        });
     });
 
     reviewForm.querySelectorAll("input[name='rating']").forEach(function (input) {
         input.addEventListener("change", function () {
             clearState(null, ratingMessage);
+            paintMeter();
         });
+    });
+
+    function applyKind() {
+        const kind = currentKind();
+        const copy = copyByKind[kind];
+
+        reviewHeading.textContent = copy.heading;
+        reviewIntro.textContent = copy.intro;
+        ratingRow.hidden = kind === "question";
+        publicOkRow.hidden = kind !== "review";
+        ratingLegend.textContent = copy.legend;
+        messageLabel.textContent = copy.message;
+        messageInput.placeholder = copy.placeholder;
+        emailLabel.innerHTML = copy.email;
+        submitButton.textContent = copy.button;
+
+        clearState(null, ratingMessage);
+        clearState(messageInput, messageMessage);
+        clearState(emailInput, emailMessage);
+        reviewStatus.textContent = "";
+    }
+
+    reviewForm.querySelectorAll("input[name='kind']").forEach(function (input) {
+        input.addEventListener("change", applyKind);
     });
 
     messageInput.addEventListener("input", function () {
@@ -659,22 +721,22 @@ document.addEventListener("DOMContentLoaded", function () {
         let isValid = true;
 
         if (kind === "review" && currentRating() === null) {
-            setInvalid(null, ratingMessage, "Tap a star rating.");
+            setInvalid(null, ratingMessage, "Pick how it slid.");
             isValid = false;
         }
 
         const message = messageInput.value.trim();
 
         if (message.length > maxMessageLength) {
-            setInvalid(messageInput, messageMessage, "Message is too long.");
+            setInvalid(messageInput, messageMessage, "That's too long. Keep it under 2000 characters.");
             isValid = false;
         } else if (kind !== "review" && message.length < 10) {
-            setInvalid(messageInput, messageMessage, "Tell us a little more.");
+            setInvalid(messageInput, messageMessage, "Give us a little more to go on.");
             isValid = false;
         }
 
         if (!nameInput.value.trim()) {
-            setInvalid(nameInput, nameMessage, "Please enter your name.");
+            setInvalid(nameInput, nameMessage, "Add your name or IG handle.");
             isValid = false;
         } else {
             clearState(nameInput, nameMessage);
@@ -683,10 +745,10 @@ document.addEventListener("DOMContentLoaded", function () {
         const email = emailInput.value.trim();
 
         if (email && !emailPattern.test(email)) {
-            setInvalid(emailInput, emailMessage, "Enter a valid email address.");
+            setInvalid(emailInput, emailMessage, "That email doesn't look right.");
             isValid = false;
         } else if (!email && kind !== "review") {
-            setInvalid(emailInput, emailMessage, "Add your email so we can get back to you.");
+            setInvalid(emailInput, emailMessage, "We need your email to get back to you.");
             isValid = false;
         } else {
             clearState(emailInput, emailMessage);
@@ -699,7 +761,7 @@ document.addEventListener("DOMContentLoaded", function () {
         event.preventDefault();
 
         if (!validate()) {
-            reviewStatus.textContent = "Please fix the highlighted fields before sending.";
+            reviewStatus.textContent = "Fix the highlighted fields and send it again.";
             return;
         }
 
@@ -709,7 +771,7 @@ document.addEventListener("DOMContentLoaded", function () {
         const formData = {
             kind: kind,
             rating: kind === "question" ? null : currentRating(),
-            product: productInput.value,
+            product: currentProduct(),
             message: messageInput.value.trim(),
             name: nameInput.value.trim(),
             email: emailInput.value.trim(),
@@ -723,7 +785,7 @@ document.addEventListener("DOMContentLoaded", function () {
         try {
             submitButton.disabled = true;
             submitButton.textContent = "Sending...";
-            reviewStatus.textContent = "Sending...";
+            reviewStatus.textContent = "";
 
             const response = await fetch("/api/feedback", {
                 method: "POST",
@@ -736,20 +798,22 @@ document.addEventListener("DOMContentLoaded", function () {
             const result = await response.json();
 
             if (!response.ok) {
-                throw new Error(result.error || "That didn't go through. Please try again.");
+                throw new Error(result.error || "That didn't go through. Try again.");
             }
 
             reviewForm.reset();
+            reviewForm.querySelector("input[name='kind'][value='" + kind + "']").checked = true;
 
             if (prefilledOrder) {
                 orderInput.value = prefilledOrder.slice(0, 64);
             }
 
             messageCount.textContent = "0";
+            paintMeter();
             applyKind();
-            reviewStatus.textContent = result.message || "Thanks. We got it.";
+            reviewStatus.textContent = copyByKind[kind].thanks;
         } catch (error) {
-            reviewStatus.textContent = error.message || "That didn't go through. Please try again.";
+            reviewStatus.textContent = error.message || "That didn't go through. Try again.";
         } finally {
             submitButton.disabled = false;
 
@@ -759,5 +823,6 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 
+    paintMeter();
     applyKind();
 });

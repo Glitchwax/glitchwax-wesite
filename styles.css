@@ -1769,6 +1769,17 @@ CONTACT PAGE BUTTON STYLING AND EFFECTS
    REVIEW PAGE (/review)
 ========================= */
 
+.review-hero {
+    padding: var(--section-padding) 0 20px;
+}
+
+.review-hero .hero-media img {
+    width: 100%;
+    max-height: 460px;
+    object-position: center 30%;
+    border-radius: var(--radius-lg);
+}
+
 .review-form [hidden] {
     display: none !important;
 }
@@ -1781,28 +1792,12 @@ CONTACT PAGE BUTTON STYLING AND EFFECTS
 .review-form legend {
     font-weight: 600;
     letter-spacing: 0.02em;
-    margin-bottom: 0.45rem;
+    margin-bottom: 0.6rem;
 }
 
-.review-form select {
-    width: 100%;
-    padding: 0.95rem 1rem;
-    border-radius: 12px;
-    border: 1px solid rgba(255, 255, 255, 0.14);
-    background: rgba(255, 255, 255, 0.06);
-    color: #ffffff;
-    font: inherit;
-}
-
-.review-form select:focus {
-    outline: none;
-    border-color: rgba(255, 255, 255, 0.35);
-    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.08);
-}
-
-.review-form select option {
-    background: var(--color-surface);
-    color: var(--color-text);
+.optional-tag {
+    font-weight: normal;
+    color: var(--color-text-muted);
 }
 
 .review-form input[type="radio"],
@@ -1811,15 +1806,21 @@ CONTACT PAGE BUTTON STYLING AND EFFECTS
     padding: 0;
 }
 
-.optional-tag {
-    font-weight: normal;
-    color: var(--color-text-muted);
+.review-form h2 {
+    margin: 6px 0 6px;
 }
 
+.review-form .contact-card-intro {
+    margin-top: -0.8rem;
+    margin-bottom: 0.4rem;
+}
+
+/* What are you sending: the site's own primary / secondary buttons. */
 .review-kind-options {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.6rem;
+    gap: 10px;
+    margin-bottom: 6px;
 }
 
 .review-kind-option {
@@ -1835,66 +1836,185 @@ CONTACT PAGE BUTTON STYLING AND EFFECTS
 
 .review-kind-option span {
     display: inline-block;
-    padding: 0.55rem 1rem;
-    border-radius: 999px;
-    border: 1px solid rgba(255, 255, 255, 0.14);
-    background: rgba(255, 255, 255, 0.06);
+    padding: 10px 16px;
+    border-radius: var(--radius-sm);
     font-weight: bold;
-    font-size: 0.92rem;
-    transition: background-color var(--transition-speed) ease, border-color var(--transition-speed) ease;
+    background-color: var(--color-secondary);
+    color: var(--color-text);
+    border: 1px solid var(--color-border);
+    transition:
+        background-color var(--transition-speed) ease,
+        transform var(--transition-speed) ease,
+        color var(--transition-speed) ease;
 }
 
 .review-kind-option:hover span {
-    border-color: rgba(255, 255, 255, 0.35);
+    background-color: var(--color-surface-alt);
+    transform: translateY(-2px);
 }
 
 .review-kind-option input:checked + span {
-    background: var(--color-primary);
+    background-color: var(--color-primary);
     border-color: var(--color-primary);
     color: var(--color-on-primary);
 }
 
 .review-kind-option input:focus-visible + span {
-    box-shadow: 0 0 0 3px rgba(254, 149, 98, 0.35);
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
 }
 
-/* Stars are written 5 → 1 and displayed reversed, so "this star and every
-   star to its left" is just "this label and the labels after it". */
-.star-rating {
-    display: inline-flex;
-    flex-direction: row-reverse;
-    justify-content: flex-end;
-    gap: 0.2rem;
+/* Which wax: the same cards as "Our Products" on the home page. */
+.review-products {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
 }
 
-.star-rating input {
+.review-product {
+    position: relative;
+    cursor: pointer;
+}
+
+.review-product input,
+.review-product-other input {
     position: absolute;
     opacity: 0;
     pointer-events: none;
 }
 
-.star-rating label {
-    font-size: 2.4rem;
-    line-height: 1;
-    color: rgba(255, 255, 255, 0.2);
-    cursor: pointer;
-    transition: color var(--transition-speed) ease, transform var(--transition-speed) ease;
+.review-product-card {
+    display: block;
+    padding: 12px;
+    background-color: var(--color-surface);
+    border: 2px solid var(--color-border);
+    border-radius: var(--radius-md);
+    transition: border-color var(--transition-speed) ease, transform var(--transition-speed) ease;
 }
 
-.star-rating label:hover,
-.star-rating label:hover ~ label,
-.star-rating input:checked ~ label {
-    color: var(--color-primary);
+.review-product-card img {
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+    border-radius: var(--radius-sm);
+    margin-bottom: 10px;
+    background-color: var(--color-surface-alt);
 }
 
-.star-rating label:hover {
+.review-product-name {
+    display: block;
+    font-weight: bold;
+}
+
+.review-product-meta {
+    display: block;
+    color: var(--color-text-muted);
+    font-size: 0.9rem;
+}
+
+.review-product:hover .review-product-card {
     transform: translateY(-2px);
 }
 
-.star-rating input:focus-visible + label {
+.review-product input:checked + .review-product-card {
+    border-color: var(--color-primary);
+}
+
+.review-product input:checked + .review-product-card .review-product-name {
+    color: var(--color-primary);
+}
+
+.review-product input:focus-visible + .review-product-card {
     outline: 2px solid var(--color-primary);
     outline-offset: 2px;
+}
+
+.review-product-other {
+    position: relative;
+    display: inline-block;
+    margin-top: 12px;
+    cursor: pointer;
+    color: var(--color-text-muted);
+    font-size: 0.92rem;
+}
+
+.review-product-other span {
+    border-bottom: 1px dashed var(--color-border);
+    padding-bottom: 2px;
+}
+
+.review-product-other input:checked + span {
+    color: var(--color-primary);
+    border-bottom-color: var(--color-primary);
+}
+
+/* How did it slide: five bars that fill orange up to the pick. */
+.wax-meter {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.wax-meter input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.wax-meter label {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    cursor: pointer;
+    text-align: center;
+}
+
+.wax-meter-bar {
+    display: block;
+    height: 18px;
     border-radius: 4px;
+    background-color: var(--color-secondary);
+    border: 1px solid var(--color-border);
+    transition: background-color var(--transition-speed) ease;
+}
+
+.wax-meter-label {
+    font-size: 0.85rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--color-text-muted);
+}
+
+.wax-meter.is-set label.is-on .wax-meter-bar,
+.wax-meter.is-previewing label.is-preview .wax-meter-bar {
+    background-color: var(--color-primary);
+    border-color: var(--color-primary);
+}
+
+.wax-meter.is-previewing label.is-on:not(.is-preview) .wax-meter-bar {
+    background-color: var(--color-secondary);
+    border-color: var(--color-border);
+}
+
+.wax-meter label.is-picked .wax-meter-label {
+    color: var(--color-primary);
+}
+
+.wax-meter input:focus-visible + label .wax-meter-bar {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+}
+
+@media (max-width: 600px) {
+    .review-hero .hero-media img {
+        max-height: 300px;
+    }
+
+    .wax-meter-label {
+        font-size: 0.7rem;
+        letter-spacing: 0.02em;
+    }
 }
 
 .order-success-review {
