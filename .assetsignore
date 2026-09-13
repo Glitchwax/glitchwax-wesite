@@ -10,3 +10,9 @@ node_modules/
 package.json
 package-lock.json
 *.md
+.dev.vars
+.dev.vars*
+.env
+.env*
+.gitignore
+.assetsignore
