@@ -518,3 +518,246 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 });
+
+/*========================================
+
+REVIEW PAGE FORM LOGIC (/review)
+
+==========================================*/
+
+document.addEventListener("DOMContentLoaded", function () {
+    const reviewForm = document.getElementById("reviewForm");
+
+    if (!reviewForm) {
+        return;
+    }
+
+    const params = new URLSearchParams(window.location.search);
+
+    const ratingRow = document.getElementById("ratingRow");
+    const ratingLegend = document.getElementById("ratingLegend");
+    const ratingMessage = document.getElementById("ratingMessage");
+    const productInput = document.getElementById("product");
+    const messageInput = document.getElementById("message");
+    const messageLabel = document.getElementById("messageLabel");
+    const messageMessage = document.getElementById("messageMessage");
+    const messageCount = document.getElementById("messageCount");
+    const nameInput = document.getElementById("reviewName");
+    const nameMessage = document.getElementById("reviewNameMessage");
+    const emailInput = document.getElementById("reviewEmail");
+    const emailLabel = document.getElementById("reviewEmailLabel");
+    const emailMessage = document.getElementById("reviewEmailMessage");
+    const orderInput = document.getElementById("orderNumber");
+    const publicOkRow = document.getElementById("publicOkRow");
+    const publicOkInput = document.getElementById("publicOk");
+    const reviewStatus = document.getElementById("reviewStatus");
+    const submitButton = reviewForm.querySelector("button[type='submit']");
+
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+    const maxMessageLength = 2000;
+
+    // The order-success page links here with ?order=<Square order id>; the
+    // packaging QR code links with ?src=qr.
+    const prefilledOrder = params.get("order") || params.get("orderId") || "";
+    const source = ["order_success", "qr"].includes(params.get("src")) ? params.get("src") : "site_review";
+
+    if (prefilledOrder) {
+        orderInput.value = prefilledOrder.slice(0, 64);
+    }
+
+    const productParam = params.get("product");
+
+    if (productParam && Array.from(productInput.options).some(function (option) { return option.value === productParam; })) {
+        productInput.value = productParam;
+    }
+
+    const copyByKind = {
+        review: {
+            legend: "Your rating",
+            message: "Your review",
+            placeholder: "How does it grind? What did you wax?",
+            button: "Send Review"
+        },
+        complaint: {
+            legend: "Rating (optional)",
+            message: "What went wrong?",
+            placeholder: "Tell us what happened and we'll make it right.",
+            button: "Send to the Team"
+        },
+        question: {
+            legend: "Rating",
+            message: "Your question",
+            placeholder: "Ask away.",
+            button: "Send Question"
+        }
+    };
+
+    function currentKind() {
+        const checked = reviewForm.querySelector("input[name='kind']:checked");
+        return checked ? checked.value : "review";
+    }
+
+    function currentRating() {
+        const checked = reviewForm.querySelector("input[name='rating']:checked");
+        return checked ? Number(checked.value) : null;
+    }
+
+    function setInvalid(input, messageElement, message) {
+        if (input) {
+            input.classList.add("input-error");
+        }
+        messageElement.textContent = message;
+        messageElement.classList.remove("field-valid");
+    }
+
+    function clearState(input, messageElement) {
+        if (input) {
+            input.classList.remove("input-error");
+        }
+        messageElement.textContent = "";
+    }
+
+    function applyKind() {
+        const kind = currentKind();
+        const copy = copyByKind[kind];
+
+        ratingRow.hidden = kind === "question";
+        publicOkRow.hidden = kind !== "review";
+        ratingLegend.textContent = copy.legend;
+        messageLabel.textContent = copy.message;
+        messageInput.placeholder = copy.placeholder;
+        submitButton.textContent = copy.button;
+        emailLabel.innerHTML = kind === "review"
+            ? "Email <span class=\"optional-tag\">(optional)</span>"
+            : "Email <span class=\"optional-tag\">(so we can reply)</span>";
+
+        clearState(null, ratingMessage);
+        clearState(messageInput, messageMessage);
+        clearState(emailInput, emailMessage);
+    }
+
+    reviewForm.querySelectorAll("input[name='kind']").forEach(function (input) {
+        input.addEventListener("change", applyKind);
+    });
+
+    reviewForm.querySelectorAll("input[name='rating']").forEach(function (input) {
+        input.addEventListener("change", function () {
+            clearState(null, ratingMessage);
+        });
+    });
+
+    messageInput.addEventListener("input", function () {
+        messageCount.textContent = messageInput.value.length;
+
+        if (messageInput.value.length <= maxMessageLength) {
+            clearState(messageInput, messageMessage);
+        }
+    });
+
+    function validate() {
+        const kind = currentKind();
+        let isValid = true;
+
+        if (kind === "review" && currentRating() === null) {
+            setInvalid(null, ratingMessage, "Tap a star rating.");
+            isValid = false;
+        }
+
+        const message = messageInput.value.trim();
+
+        if (message.length > maxMessageLength) {
+            setInvalid(messageInput, messageMessage, "Message is too long.");
+            isValid = false;
+        } else if (kind !== "review" && message.length < 10) {
+            setInvalid(messageInput, messageMessage, "Tell us a little more.");
+            isValid = false;
+        }
+
+        if (!nameInput.value.trim()) {
+            setInvalid(nameInput, nameMessage, "Please enter your name.");
+            isValid = false;
+        } else {
+            clearState(nameInput, nameMessage);
+        }
+
+        const email = emailInput.value.trim();
+
+        if (email && !emailPattern.test(email)) {
+            setInvalid(emailInput, emailMessage, "Enter a valid email address.");
+            isValid = false;
+        } else if (!email && kind !== "review") {
+            setInvalid(emailInput, emailMessage, "Add your email so we can get back to you.");
+            isValid = false;
+        } else {
+            clearState(emailInput, emailMessage);
+        }
+
+        return isValid;
+    }
+
+    reviewForm.addEventListener("submit", async function (event) {
+        event.preventDefault();
+
+        if (!validate()) {
+            reviewStatus.textContent = "Please fix the highlighted fields before sending.";
+            return;
+        }
+
+        const kind = currentKind();
+        const buttonText = submitButton.textContent;
+
+        const formData = {
+            kind: kind,
+            rating: kind === "question" ? null : currentRating(),
+            product: productInput.value,
+            message: messageInput.value.trim(),
+            name: nameInput.value.trim(),
+            email: emailInput.value.trim(),
+            order: orderInput.value.trim(),
+            publicOk: kind === "review" && publicOkInput.checked,
+            source: source,
+            website: reviewForm.querySelector(".signup-hp").value,
+            ref: params.get("ref")
+        };
+
+        try {
+            submitButton.disabled = true;
+            submitButton.textContent = "Sending...";
+            reviewStatus.textContent = "Sending...";
+
+            const response = await fetch("/api/feedback", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(formData)
+            });
+
+            const result = await response.json();
+
+            if (!response.ok) {
+                throw new Error(result.error || "That didn't go through. Please try again.");
+            }
+
+            reviewForm.reset();
+
+            if (prefilledOrder) {
+                orderInput.value = prefilledOrder.slice(0, 64);
+            }
+
+            messageCount.textContent = "0";
+            applyKind();
+            reviewStatus.textContent = result.message || "Thanks. We got it.";
+        } catch (error) {
+            reviewStatus.textContent = error.message || "That didn't go through. Please try again.";
+        } finally {
+            submitButton.disabled = false;
+
+            if (submitButton.textContent === "Sending...") {
+                submitButton.textContent = buttonText;
+            }
+        }
+    });
+
+    applyKind();
+});

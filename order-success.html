@@ -62,6 +62,10 @@ THIS PAGE IS SHOWN AFTER A SUCCESSFUL SQUARE CHECKOUT REDIRECT.
                         <a href="store.html" class="button button-secondary">Return to Store</a>
                         <a href="contact.html" class="button button-secondary">Contact Us</a>
                     </div>
+
+                    <p class="order-success-review">
+                        Once it lands: how's the wax? <a href="review.html?src=order_success" id="reviewLink">Leave a review</a>
+                    </p>
                 </div>
             </div>
         </section>
@@ -122,6 +126,13 @@ THIS PAGE IS SHOWN AFTER A SUCCESSFUL SQUARE CHECKOUT REDIRECT.
             orderDetails.hidden = false;
             orderIdElement.textContent = orderId || "Not provided";
             transactionIdElement.textContent = transactionId || "Not provided";
+        }
+
+        // Carry the order id into the review page so the buyer never has to
+        // look it up.
+        if (orderId) {
+            document.getElementById("reviewLink").href =
+                "review.html?src=order_success&order=" + encodeURIComponent(orderId);
         }
     </script>
 

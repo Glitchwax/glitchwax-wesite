@@ -27,7 +27,11 @@ export default {
     }
 
     if (url.pathname === "/api/contact") {
-      return handleContactForm(request, env);
+      return handleContactForm(request, env, ctx);
+    }
+
+    if (url.pathname === "/api/feedback") {
+      return handleFeedback(request, env);
     }
 
     if (url.pathname === "/api/subscribe") {
@@ -221,7 +225,7 @@ async function logVisit(env, row) {
   }
 }
 
-async function handleContactForm(request, env) {
+async function handleContactForm(request, env, ctx) {
   if (request.method !== "POST") {
     return Response.json(
       { error: "Method not allowed." },
@@ -295,6 +299,21 @@ ${new Date().toLocaleString("en-US", { timeZone: "America/Chicago" })} Central T
       replyTo: contact.email,
       text: emailBody
     });
+
+    // Keep a copy in the dashboard's Support & Reviews inbox (feedback table,
+    // glitch-brain migration 047). Runs after the email and in the
+    // background: if Supabase is down, the owner still got the message and
+    // the visitor still sees success.
+    ctx.waitUntil(
+      insertFeedback(env, {
+        kind: "contact",
+        message: contact.comment,
+        name: clip(contact.name, 80),
+        email: contact.email.toLowerCase(),
+        source: "contact_form",
+        ref: sanitizeRef(readCookie(request, REF_COOKIE))
+      })
+    );
 
     return Response.json({
       success: true
@@ -847,6 +866,176 @@ function normalizeUsPhone(value) {
   }
 
   return `+1${digits}`;
+}
+
+// ---------------------------------------------------------------------------
+// Reviews + support capture (/review page). Inserts into Supabase `feedback`
+// with the publishable key under an insert-only policy (glitch-brain
+// migration 047); the dashboard's Support & Reviews page reads it and a
+// database trigger texts the owner. The contact form also writes here, via
+// insertFeedback, after its email goes out.
+// ---------------------------------------------------------------------------
+const FEEDBACK_KINDS = ["review", "complaint", "question"];
+const FEEDBACK_PRODUCTS = ["Stick O Wax", "Two Pack", "Other"];
+const FEEDBACK_SOURCES = ["site_review", "order_success", "qr"];
+
+async function handleFeedback(request, env) {
+  if (request.method !== "POST") {
+    return Response.json({ error: "Method not allowed." }, { status: 405 });
+  }
+
+  if (!env.SUPABASE_URL || !env.SUPABASE_ANON_KEY) {
+    return Response.json({ error: "Reviews are not configured yet." }, { status: 500 });
+  }
+
+  let body;
+
+  try {
+    body = await request.json();
+  } catch (error) {
+    return Response.json({ error: "Invalid submission." }, { status: 400 });
+  }
+
+  if (!body || typeof body !== "object") {
+    return Response.json({ error: "Invalid submission." }, { status: 400 });
+  }
+
+  // Honeypot: real people never fill a field they cannot see.
+  if (cleanText(body.website, 10)) {
+    return Response.json({ success: true, message: "Thanks. We got it." });
+  }
+
+  const validation = validateFeedbackSubmission(body);
+
+  if (!validation.isValid) {
+    return Response.json({ error: validation.message }, { status: 400 });
+  }
+
+  const row = validation.feedback;
+  row.ref = sanitizeRef(body.ref) || sanitizeRef(readCookie(request, REF_COOKIE));
+
+  const inserted = await insertFeedback(env, row);
+
+  if (!inserted) {
+    return Response.json(
+      { error: "That didn't go through. Please try again." },
+      { status: 500 }
+    );
+  }
+
+  const messages = {
+    review: "Thanks for the review. The whole team reads every one.",
+    complaint: "Sorry about that. We'll look into it and get back to you.",
+    question: "Got it. We'll get back to you soon."
+  };
+
+  return Response.json({ success: true, message: messages[row.kind] });
+}
+
+function validateFeedbackSubmission(body) {
+  const kind = FEEDBACK_KINDS.includes(body.kind) ? body.kind : "review";
+
+  const rating = body.rating === null || body.rating === undefined || body.rating === ""
+    ? null
+    : Number(body.rating);
+
+  if (rating !== null && (!Number.isInteger(rating) || rating < 1 || rating > 5)) {
+    return { isValid: false, message: "Pick a rating from 1 to 5 stars." };
+  }
+
+  if (kind === "review" && rating === null) {
+    return { isValid: false, message: "Tap a star rating first." };
+  }
+
+  // Keep line breaks in the message (reviews read better with them), strip
+  // other control characters.
+  const message = typeof body.message === "string"
+    ? body.message
+        .replace(/\r\n?/g, "\n")
+        .replace(/[ -	-]/g, " ")
+        .replace(/\n{3,}/g, "\n\n")
+        .trim()
+    : "";
+
+  if (message.length > 2000) {
+    return { isValid: false, message: "Message is too long (2000 characters max)." };
+  }
+
+  if (kind !== "review" && message.length < 10) {
+    return { isValid: false, message: "Tell us a little more (at least 10 characters)." };
+  }
+
+  const name = cleanText(body.name, 80);
+
+  if (!name) {
+    return { isValid: false, message: "Please enter your name." };
+  }
+
+  const email = cleanText(body.email, 254).toLowerCase();
+  const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+
+  if (email && !emailPattern.test(email)) {
+    return { isValid: false, message: "Enter a valid email address, or leave it blank." };
+  }
+
+  if (kind !== "review" && !email) {
+    return { isValid: false, message: "Add your email so we can get back to you." };
+  }
+
+  const product = FEEDBACK_PRODUCTS.includes(body.product) ? body.product : null;
+  const orderRef = cleanText(body.order, 64).replace(/^#/, "");
+  const source = FEEDBACK_SOURCES.includes(body.source) ? body.source : "site_review";
+
+  return {
+    isValid: true,
+    feedback: {
+      kind,
+      rating,
+      message: message || null,
+      name,
+      email: email || null,
+      order_ref: orderRef || null,
+      product,
+      source,
+      // Consent to be quoted only means something on a review.
+      public_ok: kind === "review" && body.publicOk === true
+    }
+  };
+}
+
+/** Insert one feedback row; resolves true/false, never throws. */
+async function insertFeedback(env, row) {
+  if (!env.SUPABASE_URL || !env.SUPABASE_ANON_KEY) {
+    return false;
+  }
+
+  try {
+    const response = await fetch(`${env.SUPABASE_URL}/rest/v1/feedback`, {
+      method: "POST",
+      headers: {
+        apikey: env.SUPABASE_ANON_KEY,
+        Authorization: `Bearer ${env.SUPABASE_ANON_KEY}`,
+        "Content-Type": "application/json",
+        Prefer: "return=minimal"
+      },
+      body: JSON.stringify(row)
+    });
+
+    if (!response.ok) {
+      console.error("feedback insert failed.", {
+        status: response.status,
+        body: (await response.text()).slice(0, 300)
+      });
+
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.error("feedback insert error.", { message: error.message });
+
+    return false;
+  }
 }
 
 // ---------------------------------------------------------------------------

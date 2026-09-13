@@ -1,0 +1,233 @@
+<!--
+REVIEW PAGE HTML
+THIS PAGE LETS BUYERS LEAVE A STAR REVIEW, REPORT A PROBLEM WITH AN ORDER, OR ASK A QUESTION
+IT IS LINKED FROM THE ORDER SUCCESS PAGE AND FROM THE QR CODE ON THE PACKAGING INSERT (/review?src=qr)
+SUBMISSIONS POST TO /api/feedback, WHICH SAVES THEM FOR THE TEAM
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Leave a Review | Glitch Wax</title>
+    <meta name="description" content="How's the wax? Leave a Glitch Wax review, report a problem with your order, or ask a question.">
+    <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+<div class="background-logo"></div>
+
+<header class="site-header">
+    <div class="container header-inner">
+        <a href="index.html" class="logo">
+            <img src="images/logo.png" alt="Glitch Wax logo" class="logo-image">
+        </a>
+
+        <nav class="site-nav">
+            <a href="index.html">Home</a>
+            <a href="store.html">Store</a>
+            <a href="contact.html">Contact</a>
+        </nav>
+    </div>
+</header>
+
+    <main>
+        <section class="contact-hero section">
+            <div class="container">
+                <p class="section-eyebrow">Reviews</p>
+                <h1>How's the wax?</h1>
+                <p class="section-intro">
+                    Tell us straight. Good reviews help other skaters find us, and if something went wrong we want to fix it.
+                </p>
+            </div>
+        </section>
+
+        <section class="contact-section section">
+            <div class="container contact-grid">
+                <div class="contact-form-card">
+                    <h2>Leave a Review</h2>
+                    <p class="contact-card-intro">
+                        Takes 30 seconds. Every message goes straight to the Glitch Wax team.
+                    </p>
+
+                    <form id="reviewForm" class="contact-form review-form" novalidate>
+                        <fieldset class="form-row review-kind">
+                            <legend>What's this about?</legend>
+                            <div class="review-kind-options">
+                                <label class="review-kind-option">
+                                    <input type="radio" name="kind" value="review" checked>
+                                    <span>Review</span>
+                                </label>
+                                <label class="review-kind-option">
+                                    <input type="radio" name="kind" value="complaint">
+                                    <span>Problem with my order</span>
+                                </label>
+                                <label class="review-kind-option">
+                                    <input type="radio" name="kind" value="question">
+                                    <span>Question</span>
+                                </label>
+                            </div>
+                        </fieldset>
+
+                        <fieldset class="form-row" id="ratingRow">
+                            <legend id="ratingLegend">Your rating</legend>
+                            <div class="star-rating">
+                                <input type="radio" id="star5" name="rating" value="5">
+                                <label for="star5" title="5 stars">&#9733;<span class="sr-only">5 stars</span></label>
+                                <input type="radio" id="star4" name="rating" value="4">
+                                <label for="star4" title="4 stars">&#9733;<span class="sr-only">4 stars</span></label>
+                                <input type="radio" id="star3" name="rating" value="3">
+                                <label for="star3" title="3 stars">&#9733;<span class="sr-only">3 stars</span></label>
+                                <input type="radio" id="star2" name="rating" value="2">
+                                <label for="star2" title="2 stars">&#9733;<span class="sr-only">2 stars</span></label>
+                                <input type="radio" id="star1" name="rating" value="1">
+                                <label for="star1" title="1 star">&#9733;<span class="sr-only">1 star</span></label>
+                            </div>
+                            <p class="field-message" id="ratingMessage"></p>
+                        </fieldset>
+
+                        <div class="form-row">
+                            <label for="product">What did you buy?</label>
+                            <select id="product" name="product">
+                                <option value="">Choose one</option>
+                                <option value="Stick O Wax">Stick O Wax</option>
+                                <option value="Two Pack">Two Pack</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+
+                        <div class="form-row">
+                            <label for="message" id="messageLabel">Your review</label>
+                            <textarea
+                                id="message"
+                                name="message"
+                                rows="6"
+                                maxlength="2000"
+                                placeholder="How does it grind? What did you wax?"
+                            ></textarea>
+                            <div class="comment-meta">
+                                <p class="field-message" id="messageMessage"></p>
+                                <p class="char-counter"><span id="messageCount">0</span>/2000</p>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <label for="reviewName">Name</label>
+                            <input
+                                type="text"
+                                id="reviewName"
+                                name="name"
+                                maxlength="80"
+                                autocomplete="name"
+                                placeholder="First name or IG handle is fine"
+                                required
+                            />
+                            <p class="field-message" id="reviewNameMessage"></p>
+                        </div>
+
+                        <div class="form-row">
+                            <label for="reviewEmail" id="reviewEmailLabel">Email <span class="optional-tag">(optional)</span></label>
+                            <input
+                                type="email"
+                                id="reviewEmail"
+                                name="email"
+                                maxlength="254"
+                                autocomplete="email"
+                                inputmode="email"
+                            />
+                            <p class="field-message" id="reviewEmailMessage"></p>
+                        </div>
+
+                        <div class="form-row">
+                            <label for="orderNumber">Order number <span class="optional-tag">(optional)</span></label>
+                            <input
+                                type="text"
+                                id="orderNumber"
+                                name="order"
+                                maxlength="64"
+                                autocomplete="off"
+                                placeholder="From your confirmation email"
+                            />
+                        </div>
+
+                        <label class="signup-consent" id="publicOkRow">
+                            <input type="checkbox" name="publicOk" id="publicOk">
+                            <span>OK to quote this review (first name only) on Glitch Wax social posts or the website.</span>
+                        </label>
+
+                        <input type="text" name="website" class="signup-hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+
+                        <button type="submit" class="button button-primary contact-submit-button">Send Review</button>
+
+                        <p id="reviewStatus" class="form-status" aria-live="polite"></p>
+                    </form>
+                </div>
+
+                <div class="contact-side-column">
+                    <aside class="contact-info-card">
+                        <h2>Something off?</h2>
+                        <p class="contact-card-intro">
+                            Wrong item, damaged in shipping, or it just didn't work for you? Pick "Problem with my order", add your order number, and we'll make it right.
+                        </p>
+
+                        <div class="mailing-address-block">
+                            <h3>Returns</h3>
+                            <address>
+                                Glitch Wax<br />
+                                18202 Minnetonka Boulevard<br />
+                                Deephaven, MN 55391
+                            </address>
+                        </div>
+                    </aside>
+
+                    <div class="brand-card brand-glitch-target">
+                        <div class="brand-glitch-layer brand-glitch-base">
+                            <img src="images/logo.png" alt="Glitch Wax logo" class="brand-card-image" />
+                        </div>
+
+                        <div class="brand-glitch-layer brand-glitch-red" aria-hidden="true">
+                            <img src="images/logo.png" alt="" class="brand-card-image" />
+                        </div>
+
+                        <div class="brand-glitch-layer brand-glitch-cyan" aria-hidden="true">
+                            <img src="images/logo.png" alt="" class="brand-card-image" />
+                        </div>
+
+                        <div class="brand-glitch-scan" aria-hidden="true"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <section class="signup" aria-labelledby="signupHeading">
+        <div class="container signup-inner">
+            <div class="signup-copy">
+                <p class="section-label">Stay in the loop</p>
+                <h2 id="signupHeading">Drops, restocks, rider clips.</h2>
+                <p>No spam. Unsubscribe anytime.</p>
+            </div>
+            <form id="signupForm" class="signup-form" novalidate>
+                <div class="signup-fields">
+                    <input type="email" name="email" id="signupEmail" placeholder="you@email.com" autocomplete="email" required>
+                    <input type="tel" name="phone" id="signupPhone" placeholder="Phone (optional, US)" autocomplete="tel">
+                    <button type="submit" class="button button-primary">Sign up</button>
+                </div>
+                <label class="signup-consent">
+                    <input type="checkbox" name="smsConsent" id="signupSms">
+                    <span>Text me too. Msg &amp; data rates may apply. Reply STOP to opt out.</span>
+                </label>
+                <input type="text" name="website" class="signup-hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+                <p class="field-message" id="signupStatus" role="status"></p>
+            </form>
+        </div>
+    </section>
+
+    <footer class="site-footer">
+        <div class="container footer-container">
+            <p>&copy; 2026 Glitch Wax. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>

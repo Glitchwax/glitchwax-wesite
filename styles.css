@@ -1764,3 +1764,148 @@ CONTACT PAGE BUTTON STYLING AND EFFECTS
         grid-template-columns: 1fr;
     }
 }
+
+/* =========================
+   REVIEW PAGE (/review)
+========================= */
+
+.review-form [hidden] {
+    display: none !important;
+}
+
+.review-form fieldset {
+    border: none;
+    min-width: 0;
+}
+
+.review-form legend {
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    margin-bottom: 0.45rem;
+}
+
+.review-form select {
+    width: 100%;
+    padding: 0.95rem 1rem;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    background: rgba(255, 255, 255, 0.06);
+    color: #ffffff;
+    font: inherit;
+}
+
+.review-form select:focus {
+    outline: none;
+    border-color: rgba(255, 255, 255, 0.35);
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.08);
+}
+
+.review-form select option {
+    background: var(--color-surface);
+    color: var(--color-text);
+}
+
+.review-form input[type="radio"],
+.review-form input[type="checkbox"] {
+    width: auto;
+    padding: 0;
+}
+
+.optional-tag {
+    font-weight: normal;
+    color: var(--color-text-muted);
+}
+
+.review-kind-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+}
+
+.review-kind-option {
+    position: relative;
+    cursor: pointer;
+}
+
+.review-kind-option input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.review-kind-option span {
+    display: inline-block;
+    padding: 0.55rem 1rem;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    background: rgba(255, 255, 255, 0.06);
+    font-weight: bold;
+    font-size: 0.92rem;
+    transition: background-color var(--transition-speed) ease, border-color var(--transition-speed) ease;
+}
+
+.review-kind-option:hover span {
+    border-color: rgba(255, 255, 255, 0.35);
+}
+
+.review-kind-option input:checked + span {
+    background: var(--color-primary);
+    border-color: var(--color-primary);
+    color: var(--color-on-primary);
+}
+
+.review-kind-option input:focus-visible + span {
+    box-shadow: 0 0 0 3px rgba(254, 149, 98, 0.35);
+}
+
+/* Stars are written 5 → 1 and displayed reversed, so "this star and every
+   star to its left" is just "this label and the labels after it". */
+.star-rating {
+    display: inline-flex;
+    flex-direction: row-reverse;
+    justify-content: flex-end;
+    gap: 0.2rem;
+}
+
+.star-rating input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.star-rating label {
+    font-size: 2.4rem;
+    line-height: 1;
+    color: rgba(255, 255, 255, 0.2);
+    cursor: pointer;
+    transition: color var(--transition-speed) ease, transform var(--transition-speed) ease;
+}
+
+.star-rating label:hover,
+.star-rating label:hover ~ label,
+.star-rating input:checked ~ label {
+    color: var(--color-primary);
+}
+
+.star-rating label:hover {
+    transform: translateY(-2px);
+}
+
+.star-rating input:focus-visible + label {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+    border-radius: 4px;
+}
+
+.order-success-review {
+    margin-top: 1.25rem;
+}
+
+.order-success-review a {
+    color: var(--color-primary);
+    font-weight: bold;
+}
+
+.order-success-review a:hover {
+    color: var(--color-primary-hover);
+}
