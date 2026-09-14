@@ -619,7 +619,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const copyByKind = {
         review: {
             heading: "Rate Your Wax",
-            intro: "Pick the wax you rode, give it a score, and let other skaters know what they are getting.",
+            intro: "Give it a score and let other skaters know what they are getting.",
             legend: "How did it slide?",
             message: "What did you wax?",
             placeholder: "The spot, the trick, how long it lasted.",
