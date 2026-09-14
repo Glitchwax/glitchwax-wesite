@@ -534,6 +534,21 @@ await test("A-49 a bad signature is rejected before any lookup", async () => {
   assert.equal(calls.length, 0);
 });
 
+await test("/review redirects to /contact and keeps the query string (contact/review merge)", async () => {
+  stubFetch([]);
+
+  for (const path of ["/review", "/review.html", "/review?src=qr&order=ABC123"]) {
+    const response = await worker.fetch(new Request("https://glitchwax.com" + path), BASE_ENV, makeCtx().ctx);
+
+    assert.equal(response.status, 301, path + " should 301");
+
+    const location = new URL(response.headers.get("Location"));
+
+    assert.equal(location.pathname, "/contact", path + " should land on /contact");
+    assert.equal(location.search, new URL("https://glitchwax.com" + path).search, path + " should keep its query");
+  }
+});
+
 console.log(`\n${passes} passed, ${failures} failed`);
 
 if (failures > 0) {

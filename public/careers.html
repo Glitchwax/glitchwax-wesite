@@ -1,0 +1,130 @@
+<!--
+CAREERS PAGE HTML
+WHAT IT IS LIKE TO WORK WITH GLITCH WAX, THE KINDS OF ROLES, AND ONE BUTTON TO THE APPLICATION
+THE APPLICATION ITSELF LIVES ON THE SEPARATE PUBLIC APPLY SITE (glitchwax-apply.pages.dev),
+WHICH WRITES STRAIGHT INTO THE TEAM'S HIRING PIPELINE. NOTHING ON THIS PAGE TOUCHES THE DATABASE.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Careers | Glitch Wax</title>
+    <meta name="description" content="Ride for Glitch Wax, help make the wax, or build the brand. See the kinds of roles we bring people on for and apply in a few minutes.">
+    <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+<div class="background-logo"></div>
+
+<header class="site-header">
+    <div class="container header-inner">
+        <a href="index.html" class="logo">
+            <img src="images/logo.png" alt="Glitch Wax logo" class="logo-image">
+        </a>
+
+        <nav class="site-nav">
+            <a href="index.html">Home</a>
+            <a href="store.html">Store</a>
+            <a href="contact.html">Contact</a>
+            <a href="careers.html">Careers</a>
+        </nav>
+    </div>
+</header>
+
+    <main>
+        <section class="contact-hero section">
+            <div class="container">
+                <p class="section-eyebrow">Join The Crew</p>
+                <h1>Built by skaters. Hiring skaters.</h1>
+                <p class="section-intro">
+                    Glitch Wax is a small crew that makes every stick and pack by hand and puts it in front of
+                    real skaters. If that sounds like your kind of work, tell us who you are.
+                </p>
+            </div>
+        </section>
+
+        <section class="careers-section section">
+            <div class="container">
+                <div class="careers-roles">
+                    <article class="careers-role">
+                        <p class="section-label">Ride</p>
+                        <h2>Sponsored Skaters</h2>
+                        <p>
+                            You skate, you film, you rep the wax where it gets used. Sponsored riders get product,
+                            a personal link, and a real say in what we make next.
+                        </p>
+                    </article>
+
+                    <article class="careers-role">
+                        <p class="section-label">Make</p>
+                        <h2>Production &amp; Packaging</h2>
+                        <p>
+                            Shifts in the workspace pouring, packing, and keeping the line clean. No experience
+                            needed. We train on our own process from the first day.
+                        </p>
+                    </article>
+
+                    <article class="careers-role">
+                        <p class="section-label">Build</p>
+                        <h2>Content, Apparel &amp; Creative</h2>
+                        <p>
+                            Editors, animators, designers, and people who can run a shoot. Project work and
+                            contractor roles that grow with the brand.
+                        </p>
+                    </article>
+                </div>
+
+                <div class="careers-cta">
+                    <h2>Apply in a few minutes</h2>
+                    <p class="contact-card-intro">
+                        One short form. Tell us what you do, drop your Instagram, and the crew reads every one.
+                        Not sure which role fits? Apply anyway and say so.
+                    </p>
+                    <a href="https://glitchwax-apply.pages.dev/" class="button button-primary" rel="noopener">Apply Now</a>
+                    <p class="careers-note">
+                        The application opens on our secure hiring page. Questions first?
+                        <a href="contact.html?kind=question">Ask the crew</a>.
+                    </p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <section class="signup" aria-labelledby="signupHeading">
+        <div class="container signup-inner">
+            <div class="signup-copy">
+                <p class="section-label">Stay in the loop</p>
+                <h2 id="signupHeading">Drops, restocks, rider clips.</h2>
+                <p>No spam. Unsubscribe anytime.</p>
+            </div>
+            <form id="signupForm" class="signup-form" novalidate>
+                <div class="signup-fields">
+                    <input type="email" name="email" id="signupEmail" placeholder="you@email.com" autocomplete="email" required>
+                    <input type="tel" name="phone" id="signupPhone" placeholder="Phone (optional, US)" autocomplete="tel">
+                    <button type="submit" class="button button-primary">Sign up</button>
+                </div>
+                <label class="signup-consent">
+                    <input type="checkbox" name="smsConsent" id="signupSms">
+                    <span>Text me too. Msg &amp; data rates may apply. Reply STOP to opt out.</span>
+                </label>
+                <input type="text" name="website" class="signup-hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+                <p class="field-message" id="signupStatus" role="status"></p>
+            </form>
+        </div>
+    </section>
+
+    <footer class="site-footer">
+        <div class="container footer-inner">
+            <p>&copy; 2026 Glitch Wax. All rights reserved.</p>
+            <div class="footer-links">
+                <a href="index.html">Home</a>
+                <a href="store.html">Store</a>
+                <a href="contact.html">Contact</a>
+                <a href="careers.html">Careers</a>
+            </div>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>

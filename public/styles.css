@@ -650,6 +650,73 @@ body > *:not(.background-logo):not(#glitch-overlay):not(#gw-lightbox) {
 }
 
 /* =========================
+   CAREERS PAGE (/careers)
+========================= */
+
+.careers-section {
+    padding-top: 1rem;
+}
+
+.careers-roles {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+    margin-bottom: 40px;
+}
+
+.careers-role {
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    padding: 28px;
+}
+
+.careers-role h2 {
+    margin: 6px 0 12px;
+    font-size: 1.25rem;
+}
+
+.careers-role p:last-child {
+    color: var(--color-text-muted);
+    line-height: 1.7;
+}
+
+.careers-cta {
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    padding: 36px 28px;
+    text-align: center;
+}
+
+.careers-cta h2 {
+    margin-bottom: 10px;
+}
+
+.careers-cta .contact-card-intro {
+    max-width: 560px;
+    margin: 0 auto 22px;
+}
+
+.careers-note {
+    margin-top: 18px;
+    color: var(--color-text-muted);
+    font-size: 0.95rem;
+}
+
+.careers-note a {
+    color: var(--color-primary);
+}
+
+@media (max-width: 900px) {
+    .careers-roles {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* =========================
    PRODUCT GALLERY + LIGHTBOX
    (script.js builds the .gw-lightbox element on the product pages)
 ========================= */
@@ -1041,13 +1108,17 @@ body.gw-lightbox-open {
    NAV GLITCH EFFECT
 ========================= */
 
-.site-nav a {
+/* Header nav and footer links share this; script.js sets data-text on both. */
+.site-nav a,
+.footer-links a {
     position: relative;
     display: inline-block;
 }
 
 .site-nav a::before,
-.site-nav a::after {
+.site-nav a::after,
+.footer-links a::before,
+.footer-links a::after {
     content: attr(data-text);
     position: absolute;
     top: 0;
@@ -1056,24 +1127,29 @@ body.gw-lightbox-open {
     pointer-events: none;
 }
 
-.site-nav a::before {
+.site-nav a::before,
+.footer-links a::before {
     color: rgba(255, 60, 60, 0.9);
 }
 
-.site-nav a::after {
+.site-nav a::after,
+.footer-links a::after {
     color: rgba(0, 255, 255, 0.9);
 }
 
-.site-nav a.nav-glitch-active {
+.site-nav a.nav-glitch-active,
+.footer-links a.nav-glitch-active {
     animation: navGlitchMain 0.24s steps(1, end);
 }
 
-.site-nav a.nav-glitch-active::before {
+.site-nav a.nav-glitch-active::before,
+.footer-links a.nav-glitch-active::before {
     opacity: 1;
     animation: navGlitchRed 0.24s steps(1, end);
 }
 
-.site-nav a.nav-glitch-active::after {
+.site-nav a.nav-glitch-active::after,
+.footer-links a.nav-glitch-active::after {
     opacity: 1;
     animation: navGlitchCyan 0.24s steps(1, end);
 }
@@ -1897,7 +1973,7 @@ CONTACT PAGE BUTTON STYLING AND EFFECTS
 }
 
 /* =========================
-   REVIEW PAGE (/review)
+   CONTACT + REVIEW FORM (/contact; /review redirects here)
 ========================= */
 
 .review-hero {

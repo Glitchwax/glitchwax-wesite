@@ -78,11 +78,12 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 /*============================
-NAV LINK GLITCH EFFECT
+NAV + FOOTER LINK GLITCH EFFECT
 ==============================*/
 
 document.addEventListener("DOMContentLoaded", function () {
-    const navLinks = document.querySelectorAll(".site-nav a");
+    // Header nav and footer links share the same glitch (data-text + ::before/::after in CSS).
+    const navLinks = document.querySelectorAll(".site-nav a, .footer-links a");
 
     navLinks.forEach(function (link) {
         link.setAttribute("data-text", link.textContent.trim());
@@ -131,277 +132,6 @@ document.addEventListener("DOMContentLoaded", function () {
         void logoLink.offsetWidth;
         logoLink.classList.add("logo-glitch-active");
     }, { passive: true });
-});
-
-/*========================================
-
-CONTACT FORM LOGIC
-
-==========================================*/
-
-document.addEventListener("DOMContentLoaded", function () {
-    const contactForm = document.getElementById("contactForm");
-
-    if (!contactForm) {
-        return;
-    }
-
-    const nameInput = document.getElementById("name");
-    const emailInput = document.getElementById("email");
-    const phoneInput = document.getElementById("phone");
-    const commentInput = document.getElementById("comment");
-
-    const nameMessage = document.getElementById("nameMessage");
-    const emailMessage = document.getElementById("emailMessage");
-    const phoneMessage = document.getElementById("phoneMessage");
-    const commentMessage = document.getElementById("commentMessage");
-    const formStatus = document.getElementById("formStatus");
-    const commentCount = document.getElementById("commentCount");
-
-    const maxCommentLength = 500;
-
-    function setInvalid(input, messageElement, message) {
-        input.classList.add("input-error");
-        input.classList.remove("input-valid");
-        messageElement.textContent = message;
-        messageElement.classList.remove("field-valid");
-    }
-
-    function setValid(input, messageElement, message) {
-        input.classList.remove("input-error");
-        input.classList.add("input-valid");
-        messageElement.textContent = message;
-        messageElement.classList.add("field-valid");
-    }
-
-    function clearState(input, messageElement) {
-        input.classList.remove("input-error");
-        input.classList.remove("input-valid");
-        messageElement.textContent = "";
-        messageElement.classList.remove("field-valid");
-    }
-
-    function validateName() {
-        const value = nameInput.value.trim();
-
-        if (!value) {
-            setInvalid(nameInput, nameMessage, "Please enter your name.");
-            return false;
-        }
-
-        if (value.length < 2) {
-            setInvalid(nameInput, nameMessage, "Name must be at least 2 characters.");
-            return false;
-        }
-
-        const namePattern = /^[a-zA-Z\s.'-]+$/;
-
-        if (!namePattern.test(value)) {
-            setInvalid(nameInput, nameMessage, "Name contains invalid characters.");
-            return false;
-        }
-
-        setValid(nameInput, nameMessage, "Looks good.");
-        return true;
-    }
-
-    function validateEmail() {
-        const value = emailInput.value.trim();
-
-        if (!value) {
-            setInvalid(emailInput, emailMessage, "Please enter your email address.");
-            return false;
-        }
-
-        const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
-
-        if (!emailPattern.test(value)) {
-            setInvalid(emailInput, emailMessage, "Enter a valid email address.");
-            return false;
-        }
-
-        setValid(emailInput, emailMessage, "Email format looks correct.");
-        return true;
-    }
-
-    function validatePhone() {
-        const rawValue = phoneInput.value.trim();
-
-        if (!rawValue) {
-            setInvalid(phoneInput, phoneMessage, "Please enter your phone number.");
-            return false;
-        }
-
-        const digitsOnly = rawValue.replace(/\D/g, "");
-
-        if (digitsOnly.length === 11 && digitsOnly.startsWith("1")) {
-            return validateNorthAmericanNumber(digitsOnly.slice(1));
-        }
-
-        if (digitsOnly.length !== 10) {
-            setInvalid(phoneInput, phoneMessage, "Enter a valid 10-digit phone number.");
-            return false;
-        }
-
-        return validateNorthAmericanNumber(digitsOnly);
-    }
-
-    function validateNorthAmericanNumber(digits) {
-        const areaCode = digits.slice(0, 3);
-        const centralOffice = digits.slice(3, 6);
-
-        if (areaCode[0] === "0" || areaCode[0] === "1") {
-            setInvalid(phoneInput, phoneMessage, "Area code is not valid.");
-            return false;
-        }
-
-        if (centralOffice[0] === "0" || centralOffice[0] === "1") {
-            setInvalid(phoneInput, phoneMessage, "Phone number is not valid.");
-            return false;
-        }
-
-        if (/^(\d)\1+$/.test(digits)) {
-            setInvalid(phoneInput, phoneMessage, "Phone number cannot be all the same digit.");
-            return false;
-        }
-
-        const formatted = formatPhoneNumber(digits);
-        phoneInput.value = formatted;
-        setValid(phoneInput, phoneMessage, "Phone number format looks valid.");
-        return true;
-    }
-
-    function formatPhoneNumber(digits) {
-        return "(" + digits.slice(0, 3) + ") " + digits.slice(3, 6) + "-" + digits.slice(6);
-    }
-
-    function validateComment() {
-        const value = commentInput.value.trim();
-        const length = value.length;
-
-        commentCount.textContent = commentInput.value.length;
-
-        if (!value) {
-            setInvalid(commentInput, commentMessage, "Please enter a comment.");
-            return false;
-        }
-
-        if (length < 10) {
-            setInvalid(commentInput, commentMessage, "Comment is too short.");
-            return false;
-        }
-
-        if (length > maxCommentLength) {
-            setInvalid(commentInput, commentMessage, "Comment is too long.");
-            return false;
-        }
-
-        setValid(commentInput, commentMessage, "Looks good.");
-        return true;
-    }
-
-    nameInput.addEventListener("blur", validateName);
-    emailInput.addEventListener("blur", validateEmail);
-    phoneInput.addEventListener("blur", validatePhone);
-    commentInput.addEventListener("blur", validateComment);
-
-    commentInput.addEventListener("input", function () {
-        commentCount.textContent = commentInput.value.length;
-
-        if (commentInput.value.length > maxCommentLength) {
-            setInvalid(commentInput, commentMessage, "Comment is too long.");
-        } else if (commentInput.value.trim().length === 0) {
-            clearState(commentInput, commentMessage);
-        } else if (commentInput.value.trim().length >= 10) {
-            setValid(commentInput, commentMessage, "Looks good.");
-        } else {
-            setInvalid(commentInput, commentMessage, "Comment is too short.");
-        }
-    });
-
-    nameInput.addEventListener("input", function () {
-        if (!nameInput.value.trim()) {
-            clearState(nameInput, nameMessage);
-        }
-    });
-
-    emailInput.addEventListener("input", function () {
-        if (!emailInput.value.trim()) {
-            clearState(emailInput, emailMessage);
-        }
-    });
-
-    phoneInput.addEventListener("input", function () {
-        const cleaned = phoneInput.value.replace(/[^\d()-\s]/g, "");
-
-        if (cleaned !== phoneInput.value) {
-            phoneInput.value = cleaned;
-        }
-
-        if (!phoneInput.value.trim()) {
-            clearState(phoneInput, phoneMessage);
-        }
-    });
-
-    contactForm.addEventListener("submit", async function (event) {
-        event.preventDefault();
-
-        const isNameValid = validateName();
-        const isEmailValid = validateEmail();
-        const isPhoneValid = validatePhone();
-        const isCommentValid = validateComment();
-
-        if (!isNameValid || !isEmailValid || !isPhoneValid || !isCommentValid) {
-            formStatus.textContent = "Please fix the highlighted fields before submitting.";
-            return;
-        }
-
-        const submitButton = contactForm.querySelector("button[type='submit']");
-
-        const formData = {
-            name: nameInput.value.trim(),
-            email: emailInput.value.trim(),
-            phone: phoneInput.value.trim(),
-            comment: commentInput.value.trim(),
-            turnstileToken: glitchwaxTurnstileToken(contactForm)
-        };
-
-        try {
-            submitButton.disabled = true;
-            submitButton.textContent = "Sending...";
-            formStatus.textContent = "Sending your message...";
-
-            const response = await fetch("/api/contact", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify(formData)
-            });
-
-            const result = await response.json();
-
-            if (!response.ok) {
-                throw new Error(result.error || "Something went wrong. Please try again.");
-            }
-
-            contactForm.reset();
-
-            clearState(nameInput, nameMessage);
-            clearState(emailInput, emailMessage);
-            clearState(phoneInput, phoneMessage);
-            clearState(commentInput, commentMessage);
-
-            commentCount.textContent = "0";
-            formStatus.textContent = "Message sent successfully. Glitch Wax will get back to you soon.";
-        } catch (error) {
-            formStatus.textContent = error.message || "Message could not be sent. Please try again later.";
-        } finally {
-            glitchwaxTurnstileReset(contactForm);
-            submitButton.disabled = false;
-            submitButton.textContent = "Send Message";
-        }
-    });
 });
 
 /*========================================
@@ -553,7 +283,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
 /*========================================
 
-REVIEW PAGE FORM LOGIC (/review)
+CONTACT + REVIEW FORM LOGIC (/contact; /review redirects here)
 
 ==========================================*/
 
@@ -578,7 +308,13 @@ document.addEventListener("DOMContentLoaded", function () {
     const messageMessage = document.getElementById("messageMessage");
     const messageCount = document.getElementById("messageCount");
     const nameInput = document.getElementById("reviewName");
+    const nameLabel = document.getElementById("reviewNameLabel");
     const nameMessage = document.getElementById("reviewNameMessage");
+    const phoneRow = document.getElementById("phoneRow");
+    const phoneInput = document.getElementById("reviewPhone");
+    const phoneMessage = document.getElementById("reviewPhoneMessage");
+    const orderRow = document.getElementById("orderRow");
+    const messageMax = document.getElementById("messageMax");
     const emailInput = document.getElementById("reviewEmail");
     const emailLabel = document.getElementById("reviewEmailLabel");
     const emailMessage = document.getElementById("reviewEmailMessage");
@@ -589,7 +325,13 @@ document.addEventListener("DOMContentLoaded", function () {
     const submitButton = reviewForm.querySelector("button[type='submit']");
 
     const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
-    const maxMessageLength = 2000;
+
+    // A question goes to /api/contact (it emails the owner), which keeps the
+    // contact form's 500-character limit; reviews and order problems go to
+    // /api/feedback and may run longer.
+    function maxMessageLength() {
+        return currentKind() === "question" ? 500 : 2000;
+    }
 
     // The order-success page links here with ?order=<Square order id>, the
     // packaging QR code with ?src=qr, and a product page can pass ?product=.
@@ -623,6 +365,7 @@ document.addEventListener("DOMContentLoaded", function () {
             legend: "How did it slide?",
             message: "What did you wax?",
             placeholder: "The spot, the trick, how long it lasted.",
+            name: "Name or IG handle",
             email: "Email <span class=\"optional-tag\">(optional)</span>",
             button: "Send Review",
             thanks: "Review received. Thanks for riding Glitch Wax."
@@ -633,19 +376,21 @@ document.addEventListener("DOMContentLoaded", function () {
             legend: "How did it slide? (optional)",
             message: "What happened?",
             placeholder: "What you ordered, what showed up, and what went wrong.",
+            name: "Name",
             email: "Email <span class=\"optional-tag\">(so we can get back to you)</span>",
             button: "Send To Glitch Wax",
             thanks: "Got it. Someone from Glitch Wax will reach out."
         },
         question: {
             heading: "Ask Us Anything",
-            intro: "Which wax for which spot, how to apply it, wholesale, anything. Ask and we will answer.",
+            intro: "Which wax for which spot, how to apply it, wholesale orders, anything else. Ask and we will answer.",
             legend: "",
             message: "Your question",
             placeholder: "Ask away.",
+            name: "Name",
             email: "Email <span class=\"optional-tag\">(so we can get back to you)</span>",
             button: "Send Question",
-            thanks: "Question received. We will get back to you soon."
+            thanks: "Question received. Glitch Wax will get back to you soon."
         }
     };
 
@@ -724,6 +469,11 @@ document.addEventListener("DOMContentLoaded", function () {
         reviewIntro.textContent = copy.intro;
         ratingRow.hidden = kind === "question";
         publicOkRow.hidden = kind !== "review";
+        phoneRow.hidden = kind === "review";
+        orderRow.hidden = kind === "question";
+        nameLabel.textContent = copy.name;
+        messageInput.maxLength = maxMessageLength();
+        messageMax.textContent = String(maxMessageLength());
         ratingLegend.textContent = copy.legend;
         messageLabel.textContent = copy.message;
         messageInput.placeholder = copy.placeholder;
@@ -733,6 +483,7 @@ document.addEventListener("DOMContentLoaded", function () {
         clearState(null, ratingMessage);
         clearState(messageInput, messageMessage);
         clearState(emailInput, emailMessage);
+        clearState(phoneInput, phoneMessage);
         reviewStatus.textContent = "";
     }
 
@@ -743,7 +494,7 @@ document.addEventListener("DOMContentLoaded", function () {
     messageInput.addEventListener("input", function () {
         messageCount.textContent = messageInput.value.length;
 
-        if (messageInput.value.length <= maxMessageLength) {
+        if (messageInput.value.length <= maxMessageLength()) {
             clearState(messageInput, messageMessage);
         }
     });
@@ -759,8 +510,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
         const message = messageInput.value.trim();
 
-        if (message.length > maxMessageLength) {
-            setInvalid(messageInput, messageMessage, "That's too long. Keep it under 2000 characters.");
+        if (message.length > maxMessageLength()) {
+            setInvalid(messageInput, messageMessage, "That's too long. Keep it under " + maxMessageLength() + " characters.");
             isValid = false;
         } else if (kind !== "review" && message.length < 10) {
             setInvalid(messageInput, messageMessage, "Give us a little more to go on.");
@@ -786,6 +537,16 @@ document.addEventListener("DOMContentLoaded", function () {
             clearState(emailInput, emailMessage);
         }
 
+        const phoneDigits = phoneInput.value.replace(/\D/g, "");
+        const phoneOk = phoneDigits.length === 0 || phoneDigits.length === 10 || (phoneDigits.length === 11 && phoneDigits.startsWith("1"));
+
+        if (kind !== "review" && !phoneOk) {
+            setInvalid(phoneInput, phoneMessage, "Enter a 10-digit phone number, or leave it blank.");
+            isValid = false;
+        } else {
+            clearState(phoneInput, phoneMessage);
+        }
+
         return isValid;
     }
 
@@ -800,9 +561,19 @@ document.addEventListener("DOMContentLoaded", function () {
         const kind = currentKind();
         const buttonText = submitButton.textContent;
 
-        const formData = {
+        // Questions take the contact route so the owner gets an email with
+        // reply-to set; reviews and order problems go to the feedback inbox.
+        const endpoint = kind === "question" ? "/api/contact" : "/api/feedback";
+
+        const formData = kind === "question" ? {
+            name: nameInput.value.trim(),
+            email: emailInput.value.trim(),
+            phone: phoneInput.value.trim(),
+            comment: messageInput.value.trim(),
+            turnstileToken: glitchwaxTurnstileToken(reviewForm)
+        } : {
             kind: kind,
-            rating: kind === "question" ? null : currentRating(),
+            rating: currentRating(),
             product: currentProduct(),
             message: messageInput.value.trim(),
             name: nameInput.value.trim(),
@@ -820,7 +591,7 @@ document.addEventListener("DOMContentLoaded", function () {
             submitButton.textContent = "Sending...";
             reviewStatus.textContent = "";
 
-            const response = await fetch("/api/feedback", {
+            const response = await fetch(endpoint, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"

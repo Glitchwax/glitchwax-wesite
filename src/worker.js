@@ -31,6 +31,13 @@ export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
 
+    // /review merged into /contact (2026-09-14). The packaging QR code prints
+    // /review?src=qr and older links carry ?order=, so the query string rides
+    // along and the form on /contact reads it exactly as before.
+    if (url.pathname === "/review" || url.pathname === "/review.html") {
+      return Response.redirect(`${url.origin}/contact${url.search}`, 301);
+    }
+
     if (url.pathname === "/api/create-checkout") {
       const blocked = await guardApiPost(request, env, "checkout");
 
@@ -244,7 +251,6 @@ function withTurnstileWidget(response, env) {
     })
     .on("form#signupForm", widget)
     .on("form#reviewForm", widget)
-    .on("form#contactForm", widget)
     .transform(response);
 }
 
@@ -663,7 +669,7 @@ Email:
 ${contact.email}
 
 Phone:
-${contact.phone}
+${contact.phone || "(not given)"}
 
 Comment:
 ${contact.comment}
@@ -741,7 +747,9 @@ function validateContactSubmission(body) {
     };
   }
 
-  const namePattern = /^[a-zA-Z\s.'-]+$/;
+  // Letters, spaces, and what an Instagram handle can carry: the form asks
+  // for "Name or IG handle" since /review merged into /contact.
+  const namePattern = /^[a-zA-Z0-9\s.'@_-]+$/;
 
   if (!namePattern.test(name)) {
     return {
@@ -766,10 +774,12 @@ function validateContactSubmission(body) {
     };
   }
 
+  // Phone is optional since the contact/review merge (2026-09-14): a question
+  // only needs an email to answer. When one is given it still has to be real.
   if (!phone) {
     return {
-      isValid: false,
-      message: "Please enter your phone number."
+      isValid: true,
+      contact: { name, email, phone: "", comment }
     };
   }
 
