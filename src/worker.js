@@ -18,39 +18,64 @@ const REF_COOKIE = "gw_ref";
 const REF_MAX_AGE_SECONDS = 60 * 60 * 24 * 30;
 const REF_PATTERN = /^[a-z0-9_.-]{1,40}$/;
 
+// The exact wording of the SMS box the visitor ticked, and the version stamp
+// stored with every consent record (audit A-14). If the checkbox copy on the
+// pages changes, bump the version so old and new consents stay tellable apart.
+// Ticking this box is a request to be texted, NOT confirmed consent: nothing
+// may be sent to a number until it has been confirmed by reply.
+const SMS_CONSENT_TEXT =
+  "Text me too. Msg & data rates may apply. Reply STOP to opt out.";
+const SMS_CONSENT_TEXT_VERSION = "2026-09-13-v1";
+
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
 
     if (url.pathname === "/api/create-checkout") {
-      return handleCreateCheckout(request, env, ctx);
+      const blocked = await guardApiPost(request, env, "checkout");
+
+      return blocked || handleCreateCheckout(request, env, ctx);
     }
 
     if (url.pathname === "/api/contact") {
-      return handleContactForm(request, env, ctx);
+      const blocked = await guardApiPost(request, env, "contact");
+
+      return blocked || handleContactForm(request, env, ctx);
     }
 
     if (url.pathname === "/api/feedback") {
-      return handleFeedback(request, env);
+      const blocked = await guardApiPost(request, env, "feedback");
+
+      return blocked || handleFeedback(request, env);
     }
 
     if (url.pathname === "/api/subscribe") {
-      return handleSubscribe(request, env);
+      const blocked = await guardApiPost(request, env, "subscribe");
+
+      return blocked || handleSubscribe(request, env);
     }
 
+    // Square signs its own POSTs and does not send application/json from a
+    // browser, so the webhook is verified by HMAC instead of the guard above.
     if (url.pathname === "/api/square-webhook") {
       return handleSquareWebhook(request, env, ctx);
     }
 
-    const response = await env.ASSETS.fetch(request);
+    const asset = await env.ASSETS.fetch(request);
 
-    if (!isHtmlNavigation(request, response)) {
-      return response;
+    if (!isHtmlResponse(request, asset)) {
+      return asset;
     }
+
+    // Turnstile widgets are injected here, so the pages themselves stay
+    // exactly as they are when no site key is configured.
+    const response = withTurnstileWidget(asset, env);
 
     const ref = sanitizeRef(url.searchParams.get("ref"));
 
-    ctx.waitUntil(logPageView(request, env, url, ref));
+    if (isDocumentNavigation(request)) {
+      ctx.waitUntil(logPageView(request, env, url, ref));
+    }
 
     if (!ref) {
       return response;
@@ -64,6 +89,216 @@ export default {
     return withCookie;
   }
 };
+
+// ---------------------------------------------------------------------------
+// Public POST guard (audit A-12): content type, origin, and a per-IP rate
+// limit, applied to every public JSON endpoint before its handler runs.
+// ---------------------------------------------------------------------------
+
+/**
+ * Returns a Response to send INSTEAD of running the handler, or null to carry
+ * on. Non-POST requests fall through so each handler keeps answering 405.
+ */
+async function guardApiPost(request, env, route) {
+  if (request.method !== "POST") {
+    return null;
+  }
+
+  // Every one of these routes is called by the site's own fetch() with
+  // Content-Type: application/json. Requiring it blocks the text/plain POST
+  // that is the one cross-site form post a browser will send without a
+  // preflight — the pages are unaffected.
+  const contentType = (request.headers.get("Content-Type") || "")
+    .split(";")[0]
+    .trim()
+    .toLowerCase();
+
+  if (contentType !== "application/json") {
+    return Response.json(
+      { error: "Send this as application/json." },
+      { status: 415 }
+    );
+  }
+
+  // A same-origin fetch always sends its own origin; anything else is not our
+  // page. Requests with no Origin header at all (curl, server-side) still get
+  // through — the rate limit covers those.
+  const origin = request.headers.get("Origin");
+
+  if (origin && !isSameHost(origin, request.url)) {
+    return Response.json({ error: "Not allowed from there." }, { status: 403 });
+  }
+
+  if (await isRateLimited(request, env, route)) {
+    return Response.json(
+      { error: "Too many tries. Give it a minute and send it again." },
+      { status: 429, headers: { "Retry-After": "60" } }
+    );
+  }
+
+  return null;
+}
+
+function isSameHost(origin, requestUrl) {
+  try {
+    return new URL(origin).host === new URL(requestUrl).host;
+  } catch (error) {
+    return false;
+  }
+}
+
+/**
+ * Per-IP, per-route rate limit using Cloudflare's Rate Limiting binding
+ * (declared in wrangler.jsonc). If the binding is missing — an older deploy,
+ * or the block removed — this returns false and nothing is limited, so a
+ * deploy can never take checkout down over rate limiting.
+ */
+async function isRateLimited(request, env, route) {
+  const limiter = route === "checkout" ? env.RL_CHECKOUT : env.RL_FORMS;
+
+  if (!limiter || typeof limiter.limit !== "function") {
+    return false;
+  }
+
+  const ip = request.headers.get("CF-Connecting-IP") || "unknown";
+
+  try {
+    const { success } = await limiter.limit({ key: `${route}:${ip}` });
+
+    if (!success) {
+      console.warn("Rate limited.", { route });
+    }
+
+    return !success;
+  } catch (error) {
+    console.error("Rate limit check failed; allowing the request.", {
+      route,
+      message: error.message
+    });
+
+    return false;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Optional Cloudflare Turnstile on the three public forms (audit A-12).
+// Nothing changes unless BOTH TURNSTILE_SITE_KEY (var) and
+// TURNSTILE_SECRET_KEY (secret) are set: the widget is injected into the
+// pages' forms on the way out, and the token is verified on the way in.
+// Requiring both means setting only one can never lock the forms.
+// ---------------------------------------------------------------------------
+const TURNSTILE_VERIFY_URL =
+  "https://challenges.cloudflare.com/turnstile/v0/siteverify";
+const TURNSTILE_SCRIPT_URL =
+  "https://challenges.cloudflare.com/turnstile/v0/api.js";
+
+function turnstileConfigured(env) {
+  if (env.TURNSTILE_SITE_KEY && env.TURNSTILE_SECRET_KEY) {
+    return true;
+  }
+
+  if (env.TURNSTILE_SITE_KEY || env.TURNSTILE_SECRET_KEY) {
+    console.error(
+      "Turnstile is half-configured (need TURNSTILE_SITE_KEY and TURNSTILE_SECRET_KEY); staying off."
+    );
+  }
+
+  return false;
+}
+
+function escapeAttribute(value) {
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/"/g, "&quot;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
+function withTurnstileWidget(response, env) {
+  if (!turnstileConfigured(env)) {
+    return response;
+  }
+
+  const siteKey = escapeAttribute(env.TURNSTILE_SITE_KEY);
+
+  const widget = {
+    element(element) {
+      // interaction-only: invisible unless Cloudflare actually wants a
+      // challenge, so the page design is untouched for real visitors.
+      element.append(
+        `<div class="cf-turnstile" data-sitekey="${siteKey}" data-appearance="interaction-only"></div>`,
+        { html: true }
+      );
+    }
+  };
+
+  // One selector per .on() — HTMLRewriter does not take selector lists.
+  return new HTMLRewriter()
+    .on("head", {
+      element(element) {
+        element.append(
+          `<script src="${TURNSTILE_SCRIPT_URL}" async defer></script>`,
+          { html: true }
+        );
+      }
+    })
+    .on("form#signupForm", widget)
+    .on("form#reviewForm", widget)
+    .on("form#contactForm", widget)
+    .transform(response);
+}
+
+/**
+ * Verifies a form's Turnstile token. Returns a Response to send instead of
+ * accepting the submission, or null to carry on. Fails OPEN if Cloudflare's
+ * verify endpoint itself is unreachable — a Turnstile outage must not eat a
+ * customer's complaint.
+ */
+async function turnstileRejection(request, env, token) {
+  if (!turnstileConfigured(env)) {
+    return null;
+  }
+
+  if (typeof token !== "string" || !token) {
+    return Response.json(
+      { error: "Finish the human check and send it again." },
+      { status: 400 }
+    );
+  }
+
+  try {
+    const response = await fetch(TURNSTILE_VERIFY_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        secret: env.TURNSTILE_SECRET_KEY,
+        response: token.slice(0, 2048),
+        remoteip: request.headers.get("CF-Connecting-IP") || undefined
+      })
+    });
+
+    const data = await response.json();
+
+    if (data && data.success) {
+      return null;
+    }
+
+    console.warn("Turnstile rejected a submission.", {
+      codes: data && data["error-codes"]
+    });
+
+    return Response.json(
+      { error: "That human check didn't pass. Reload the page and try again." },
+      { status: 403 }
+    );
+  } catch (error) {
+    console.error("Turnstile verification unreachable; allowing.", {
+      message: error.message
+    });
+
+    return null;
+  }
+}
 
 function sanitizeRef(value) {
   if (typeof value !== "string") {
@@ -89,19 +324,18 @@ function readCookie(request, name) {
   return null;
 }
 
-// Only top-level HTML navigations count as a visit — not asset fetches, not
-// prefetches, not API calls.
-function isHtmlNavigation(request, response) {
+// An HTML page response (any GET of a page — this is what may be rewritten).
+function isHtmlResponse(request, response) {
   if (request.method !== "GET" || !response.ok) {
     return false;
   }
 
-  const contentType = response.headers.get("Content-Type") || "";
+  return (response.headers.get("Content-Type") || "").includes("text/html");
+}
 
-  if (!contentType.includes("text/html")) {
-    return false;
-  }
-
+// Only top-level navigations count as a visit — not asset fetches, not
+// prefetches, not API calls.
+function isDocumentNavigation(request) {
   const dest = request.headers.get("Sec-Fetch-Dest");
 
   return !dest || dest === "document";
@@ -126,23 +360,55 @@ function classifyDevice(userAgent) {
   return "other";
 }
 
+/**
+ * The salt every visitor/IP hash is built from (audit A-71).
+ *
+ * VISITOR_HASH_SALT is the dedicated secret and the one to use. Until it is
+ * set, the old derivation stands (VISITOR_SALT, then the Square token, then a
+ * constant) so existing hashes keep matching. Setting VISITOR_HASH_SALT
+ * changes every hash from that moment: unique-visitor counts for that one day
+ * are split, nothing before or after is affected. Rotating the Square token
+ * has exactly the same effect today, which is the reason for the dedicated
+ * secret.
+ */
+function hashSalt(env) {
+  return (
+    env.VISITOR_HASH_SALT ||
+    env.VISITOR_SALT ||
+    env.SQUARE_ACCESS_TOKEN ||
+    "glitchwax"
+  );
+}
+
+async function sha256Hex(value, length) {
+  const data = new TextEncoder().encode(value);
+  const digest = await crypto.subtle.digest("SHA-256", data);
+
+  return Array.from(new Uint8Array(digest))
+    .map((byte) => byte.toString(16).padStart(2, "0"))
+    .join("")
+    .slice(0, length);
+}
+
 // Salted daily hash of IP + user agent: lets the dashboard count unique
 // visitors per day without storing either value, and cannot be reversed.
 async function visitorHash(request, env) {
   const ip = request.headers.get("CF-Connecting-IP") || "";
   const userAgent = request.headers.get("User-Agent") || "";
   const day = new Date().toISOString().slice(0, 10);
-  // An existing Worker secret doubles as the salt: it is never stored, only
-  // hashed, and SHA-256 output cannot be turned back into it.
-  const salt = env.VISITOR_SALT || env.SQUARE_ACCESS_TOKEN || "glitchwax";
 
-  const data = new TextEncoder().encode(`${salt}|${day}|${ip}|${userAgent}`);
-  const digest = await crypto.subtle.digest("SHA-256", data);
+  return sha256Hex(`${hashSalt(env)}|${day}|${ip}|${userAgent}`, 32);
+}
 
-  return Array.from(new Uint8Array(digest))
-    .map((byte) => byte.toString(16).padStart(2, "0"))
-    .join("")
-    .slice(0, 32);
+/**
+ * Salted hash of the IP alone, stable across days. Sent with every storefront
+ * write so the database side can rate-limit and so SMS consent has evidence
+ * attached (audit A-12/A-14) — the raw IP is never stored.
+ */
+async function ipHash(request, env) {
+  const ip = request.headers.get("CF-Connecting-IP") || "";
+
+  return sha256Hex(`${hashSalt(env)}|ip|${ip}`, 32);
 }
 
 function clip(value, maxLength) {
@@ -178,51 +444,158 @@ async function logPageView(request, env, url, ref) {
   const referrer = request.headers.get("Referer") || "";
   const params = url.searchParams;
 
-  return logVisit(env, {
-    kind: "pageview",
-    path: clip(normalizePath(url.pathname), 200),
-    referrer_host: referrerHost(referrer),
-    referrer: clip(referrer, 500),
-    utm_source: clip(params.get("utm_source"), 100),
-    utm_medium: clip(params.get("utm_medium"), 100),
-    utm_campaign: clip(params.get("utm_campaign"), 100),
-    utm_content: clip(params.get("utm_content"), 100),
-    ref: ref || sanitizeRef(readCookie(request, REF_COOKIE)),
-    country: clip(request.cf && request.cf.country, 2),
-    device: classifyDevice(userAgent),
-    is_bot: BOT_PATTERN.test(userAgent),
-    visitor_hash: await visitorHash(request, env)
-  });
+  return logVisit(
+    env,
+    {
+      kind: "pageview",
+      path: clip(normalizePath(url.pathname), 200),
+      referrer_host: referrerHost(referrer),
+      referrer: clip(referrer, 500),
+      utm_source: clip(params.get("utm_source"), 100),
+      utm_medium: clip(params.get("utm_medium"), 100),
+      utm_campaign: clip(params.get("utm_campaign"), 100),
+      utm_content: clip(params.get("utm_content"), 100),
+      ref: ref || sanitizeRef(readCookie(request, REF_COOKIE)),
+      country: clip(request.cf && request.cf.country, 2),
+      device: classifyDevice(userAgent),
+      is_bot: BOT_PATTERN.test(userAgent),
+      visitor_hash: await visitorHash(request, env)
+    },
+    { ip_hash: await ipHash(request, env) }
+  );
 }
 
-async function logVisit(env, row) {
-  if (!env.SUPABASE_URL || !env.SUPABASE_ANON_KEY) {
-    return;
+async function logVisit(env, row, extra) {
+  const result = await storefrontWrite(env, "site_visits", row, extra);
+
+  if (!result.ok && result.status !== 0) {
+    console.error("site_visits write failed.", { status: result.status });
   }
 
+  return result;
+}
+
+// ---------------------------------------------------------------------------
+// Storefront writes (audit A-13).
+//
+// Today these are direct table inserts with the publishable key, which means
+// anyone holding that key can write the same rows without passing any of the
+// checks above. glitch-brain migration 057 replaces them with SECURITY
+// DEFINER RPCs that take a shared secret, so the tables can stop accepting
+// anonymous inserts entirely.
+//
+// The switch is the STOREFRONT_WRITE_SECRET Worker secret:
+//   unset  -> direct table inserts, exactly as before (so this Worker can be
+//             deployed before migration 057 lands and nothing changes),
+//   set    -> sf_log_visit / sf_subscribe / sf_feedback, with the extra
+//             columns (ip_hash, SMS consent evidence) the RPCs accept.
+// A 404 from an RPC means migration 057 is not applied yet; that one case
+// falls back to the direct insert (without the extra columns, which do not
+// exist yet) and logs, so a half-finished rollout still captures the data.
+// ---------------------------------------------------------------------------
+const STOREFRONT_RPCS = {
+  site_visits: "sf_log_visit",
+  subscribers: "sf_subscribe",
+  feedback: "sf_feedback"
+};
+
+/** POST JSON to Supabase with the publishable key. Never throws. */
+async function supabasePost(env, path, payload, extraHeaders) {
   try {
-    const response = await fetch(`${env.SUPABASE_URL}/rest/v1/site_visits`, {
+    const response = await fetch(`${env.SUPABASE_URL}${path}`, {
       method: "POST",
       headers: {
         apikey: env.SUPABASE_ANON_KEY,
         Authorization: `Bearer ${env.SUPABASE_ANON_KEY}`,
         "Content-Type": "application/json",
-        Prefer: "return=minimal"
+        ...(extraHeaders || {})
       },
-      body: JSON.stringify(row)
+      body: JSON.stringify(payload)
     });
 
-    if (!response.ok) {
-      console.error("site_visits insert failed.", {
-        status: response.status,
-        body: (await response.text()).slice(0, 300)
-      });
-    }
+    return {
+      ok: response.ok,
+      status: response.status,
+      text: (await response.text()).slice(0, 500)
+    };
   } catch (error) {
-    console.error("site_visits insert error.", {
-      message: error.message
+    console.error("Supabase request error.", { path, message: error.message });
+
+    return { ok: false, status: 0, text: "" };
+  }
+}
+
+/** Reads the flags the RPCs may answer with, without depending on them. */
+function readWriteResult(result) {
+  let data = null;
+
+  if (result.text) {
+    try {
+      data = JSON.parse(result.text);
+    } catch (error) {
+      data = null;
+    }
+  }
+
+  const flag = (name) =>
+    Boolean(data && typeof data === "object" && data[name] === true) ||
+    Boolean(
+      data &&
+        typeof data === "object" &&
+        typeof data.status === "string" &&
+        data.status === name
+    );
+
+  return {
+    ok: result.ok,
+    status: result.status,
+    // 23505 (unique violation) surfaces as 409 through PostgREST.
+    duplicate: result.status === 409 || flag("duplicate"),
+    rateLimited: result.status === 429 || flag("rate_limited")
+  };
+}
+
+async function storefrontWrite(env, table, row, extra) {
+  if (!env.SUPABASE_URL || !env.SUPABASE_ANON_KEY) {
+    return { ok: false, status: 0, duplicate: false, rateLimited: false };
+  }
+
+  const rpc = STOREFRONT_RPCS[table];
+
+  if (env.STOREFRONT_WRITE_SECRET && rpc) {
+    const result = await supabasePost(env, `/rest/v1/rpc/${rpc}`, {
+      p_secret: env.STOREFRONT_WRITE_SECRET,
+      p_row: { ...row, ...(extra || {}) }
+    });
+
+    if (result.status !== 404) {
+      if (!result.ok) {
+        console.error(`${rpc} write failed.`, {
+          status: result.status,
+          body: result.text
+        });
+      }
+
+      return readWriteResult(result);
+    }
+
+    console.error(`${rpc} is missing (404); falling back to a direct insert.`, {
+      table
     });
   }
+
+  const result = await supabasePost(env, `/rest/v1/${table}`, row, {
+    Prefer: "return=minimal"
+  });
+
+  if (!result.ok && result.status !== 409) {
+    console.error(`${table} insert failed.`, {
+      status: result.status,
+      body: result.text
+    });
+  }
+
+  return readWriteResult(result);
 }
 
 async function handleContactForm(request, env, ctx) {
@@ -272,6 +645,12 @@ async function handleContactForm(request, env, ctx) {
 
     const contact = validation.contact;
 
+    const rejection = await turnstileRejection(request, env, body.turnstileToken);
+
+    if (rejection) {
+      return rejection;
+    }
+
     const emailSubject = "New Glitch Wax contact form message";
 
     const emailBody =
@@ -305,14 +684,19 @@ ${new Date().toLocaleString("en-US", { timeZone: "America/Chicago" })} Central T
     // background: if Supabase is down, the owner still got the message and
     // the visitor still sees success.
     ctx.waitUntil(
-      insertFeedback(env, {
-        kind: "contact",
-        message: contact.comment,
-        name: clip(contact.name, 80),
-        email: contact.email.toLowerCase(),
-        source: "contact_form",
-        ref: sanitizeRef(readCookie(request, REF_COOKIE))
-      })
+      (async () =>
+        insertFeedback(
+          env,
+          {
+            kind: "contact",
+            message: contact.comment,
+            name: clip(contact.name, 80),
+            email: contact.email.toLowerCase(),
+            source: "contact_form",
+            ref: sanitizeRef(readCookie(request, REF_COOKIE))
+          },
+          { ip_hash: await ipHash(request, env) }
+        ))()
     );
 
     return Response.json({
@@ -672,19 +1056,23 @@ async function handleCreateCheckout(request, env, ctx) {
 
     ctx.waitUntil(
       (async () =>
-        logVisit(env, {
-          kind: "checkout_start",
-          path: "/api/create-checkout",
-          ref,
-          country: clip(request.cf && request.cf.country, 2),
-          device: classifyDevice(request.headers.get("User-Agent") || ""),
-          is_bot: false,
-          visitor_hash: await visitorHash(request, env),
-          detail: {
-            items: cartSummary,
-            subtotal: stickOWaxTotal * 8.5 + doublePackTotal * 10
-          }
-        }))()
+        logVisit(
+          env,
+          {
+            kind: "checkout_start",
+            path: "/api/create-checkout",
+            ref,
+            country: clip(request.cf && request.cf.country, 2),
+            device: classifyDevice(request.headers.get("User-Agent") || ""),
+            is_bot: false,
+            visitor_hash: await visitorHash(request, env),
+            detail: {
+              items: cartSummary,
+              subtotal: stickOWaxTotal * 8.5 + doublePackTotal * 10
+            }
+          },
+          { ip_hash: await ipHash(request, env) }
+        ))()
     );
 
     return Response.json({
@@ -774,6 +1162,12 @@ async function handleSubscribe(request, env) {
     );
   }
 
+  const rejection = await turnstileRejection(request, env, body.turnstileToken);
+
+  if (rejection) {
+    return rejection;
+  }
+
   const smsConsent = body.smsConsent === true && Boolean(phone);
   const url = new URL(request.url);
   const referer = request.headers.get("Referer") || "";
@@ -793,6 +1187,9 @@ async function handleSubscribe(request, env) {
   const row = {
     email,
     phone,
+    // sms_consent means "ticked the box on the site", NOT a confirmed number.
+    // Nothing may be texted to this number until a confirmation reply comes
+    // back (audit A-14) — the evidence below is what makes that provable.
     sms_consent: smsConsent,
     sms_consent_at: smsConsent ? new Date().toISOString() : null,
     source_path: sourcePath,
@@ -802,41 +1199,48 @@ async function handleSubscribe(request, env) {
     country: clip(request.cf && request.cf.country, 2)
   };
 
-  try {
-    const response = await fetch(`${env.SUPABASE_URL}/rest/v1/subscribers`, {
-      method: "POST",
-      headers: {
-        apikey: env.SUPABASE_ANON_KEY,
-        Authorization: `Bearer ${env.SUPABASE_ANON_KEY}`,
-        "Content-Type": "application/json",
-        Prefer: "return=minimal"
-      },
-      body: JSON.stringify(row)
+  const extra = {
+    ip_hash: await ipHash(request, env),
+    consent_ip_hash: smsConsent ? await ipHash(request, env) : null,
+    consent_user_agent: smsConsent
+      ? clip(request.headers.get("User-Agent") || "", 300)
+      : null,
+    consent_text_version: smsConsent ? SMS_CONSENT_TEXT_VERSION : null
+  };
+
+  if (smsConsent && !env.STOREFRONT_WRITE_SECRET) {
+    // Direct-insert mode has nowhere to put the evidence columns (they arrive
+    // with glitch-brain migration 057). Say so rather than losing it quietly.
+    console.warn("SMS consent recorded WITHOUT evidence columns.", {
+      consent_text_version: SMS_CONSENT_TEXT_VERSION
     });
+  }
 
-    // 409 = the unique index on email/phone: they are already on the list.
-    if (response.status === 409) {
-      return Response.json({ success: true, message: "You're already on the list." });
-    }
+  const result = await storefrontWrite(env, "subscribers", row, extra);
 
-    if (!response.ok) {
-      console.error("subscribers insert failed.", {
-        status: response.status,
-        body: (await response.text()).slice(0, 300)
-      });
+  // The unique index on email/phone: they are already on the list.
+  if (result.duplicate) {
+    return Response.json({ success: true, message: "You're already on the list." });
+  }
 
-      return Response.json({ error: "Signup didn't go through. Please try again." }, { status: 500 });
-    }
+  if (result.rateLimited) {
+    return Response.json(
+      { error: "Too many tries. Give it a minute and send it again." },
+      { status: 429, headers: { "Retry-After": "60" } }
+    );
+  }
 
-    return Response.json({
-      success: true,
-      message: smsConsent ? "You're in. Watch your inbox and your texts." : "You're in. Watch your inbox."
-    });
-  } catch (error) {
-    console.error("subscribers insert error.", { message: error.message });
-
+  if (!result.ok) {
     return Response.json({ error: "Signup didn't go through. Please try again." }, { status: 500 });
   }
+
+  return Response.json({
+    success: true,
+    // Never promise texts on the strength of a ticked box alone.
+    message: smsConsent
+      ? "You're in. Watch your inbox. We'll text you once to confirm your number before anything else."
+      : "You're in. Watch your inbox."
+  });
 }
 
 /** "(612) 555-0134" / "612-555-0134" / "+1 612 555 0134" -> "+16125550134", else null. */
@@ -911,10 +1315,18 @@ async function handleFeedback(request, env) {
     return Response.json({ error: validation.message }, { status: 400 });
   }
 
+  const rejection = await turnstileRejection(request, env, body.turnstileToken);
+
+  if (rejection) {
+    return rejection;
+  }
+
   const row = validation.feedback;
   row.ref = sanitizeRef(body.ref) || sanitizeRef(readCookie(request, REF_COOKIE));
 
-  const inserted = await insertFeedback(env, row);
+  const inserted = await insertFeedback(env, row, {
+    ip_hash: await ipHash(request, env)
+  });
 
   if (!inserted) {
     return Response.json(
@@ -1003,39 +1415,11 @@ function validateFeedbackSubmission(body) {
   };
 }
 
-/** Insert one feedback row; resolves true/false, never throws. */
-async function insertFeedback(env, row) {
-  if (!env.SUPABASE_URL || !env.SUPABASE_ANON_KEY) {
-    return false;
-  }
+/** Write one feedback row; resolves true/false, never throws. */
+async function insertFeedback(env, row, extra) {
+  const result = await storefrontWrite(env, "feedback", row, extra);
 
-  try {
-    const response = await fetch(`${env.SUPABASE_URL}/rest/v1/feedback`, {
-      method: "POST",
-      headers: {
-        apikey: env.SUPABASE_ANON_KEY,
-        Authorization: `Bearer ${env.SUPABASE_ANON_KEY}`,
-        "Content-Type": "application/json",
-        Prefer: "return=minimal"
-      },
-      body: JSON.stringify(row)
-    });
-
-    if (!response.ok) {
-      console.error("feedback insert failed.", {
-        status: response.status,
-        body: (await response.text()).slice(0, 300)
-      });
-
-      return false;
-    }
-
-    return true;
-  } catch (error) {
-    console.error("feedback insert error.", { message: error.message });
-
-    return false;
-  }
+  return result.ok;
 }
 
 // ---------------------------------------------------------------------------
@@ -1116,26 +1500,48 @@ async function announceOrder(env, orderId, paymentId) {
       }
     });
 
-    const orderData = await orderResponse.json();
-    const order = (orderData && orderData.order) || {};
+    // A failed lookup used to fall through as "New order $0.00", and the
+    // dedupe key then silenced the correct text from the nightly sync (audit
+    // A-49). Now: say nothing, log it, and let the sync announce the order.
+    // The webhook already answered 200, so Square does not retry either way.
+    if (!orderResponse.ok) {
+      console.error("Order webhook: Square order lookup failed; not announcing.", {
+        orderId,
+        status: orderResponse.status
+      });
+
+      return;
+    }
+
+    const orderData = await orderResponse.json().catch(() => null);
+    const order = orderData && orderData.order;
+
+    if (!order) {
+      console.error("Order webhook: Square returned no order; not announcing.", {
+        orderId
+      });
+
+      return;
+    }
+
     const total = Number((order.total_money && order.total_money.amount) || 0) / 100;
     const items = (order.line_items || [])
       .map((line) => `${line.quantity}x ${line.name || "item"}`)
-      .join(" + ");
-    const fulfillment = (order.fulfillments || [])[0];
-    const recipient =
-      fulfillment && fulfillment.shipment_details && fulfillment.shipment_details.recipient;
+      .join(" + ")
+      .slice(0, 160);
     const shipping =
       (order.service_charges || [])
         .filter((charge) => /ship/i.test(charge.name || ""))
         .reduce((sum, charge) => sum + Number((charge.total_money && charge.total_money.amount) || 0), 0) /
       100;
 
+    // Nothing a customer typed goes into a text (audit A-12): catalog item
+    // names, the shipping charge and the sanitized ref code only. The buyer's
+    // name and address are on the dashboard's Shipments page, behind login.
     const bodyParts = [
       items,
-      recipient && recipient.display_name,
       shipping > 0 ? `shipping $${shipping.toFixed(2)}` : null,
-      order.reference_id ? `ref ${order.reference_id}` : null
+      order.reference_id ? `ref ${clip(String(order.reference_id), 40)}` : null
     ].filter(Boolean);
 
     const relayResponse = await fetch(env.NOTIFY_RELAY_URL || NOTIFY_RELAY_URL, {

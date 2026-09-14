@@ -1,0 +1,51 @@
+# Storefront CI (audit A-74). Checks only — this workflow never deploys, never
+# uses a secret, and never talks to Cloudflare's API. Deploys stay manual
+# (`npx wrangler deploy` from the repo root).
+name: check
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Syntax check the Worker and the page script
+        run: |
+          node --check src/worker.js
+          node --check public/script.js
+
+      - name: Worker behaviour tests (offline, no network)
+        run: node tests/worker.test.mjs
+
+      - name: Nothing private inside the assets directory
+        # public/ is the only folder that gets uploaded, so this is the last
+        # gate between a stray secrets file and glitchwax.com (audit A-39).
+        run: |
+          leaks=$(find public -type f \( -name '.env*' -o -name '.dev.vars*' -o -name '*.md' -o -name 'wrangler.*' -o -name '_worker.js' \) -print)
+          if [ -n "$leaks" ]; then
+            echo "These files would be published:"
+            echo "$leaks"
+            exit 1
+          fi
+          if [ -d public/src ] || [ -d public/.git ] || [ -d public/node_modules ]; then
+            echo "Repo internals are inside public/."
+            exit 1
+          fi
+
+      - name: Build the Worker (dry run, nothing uploaded)
+        # --dry-run compiles the Worker and validates wrangler.jsonc, including
+        # the bindings, without credentials and without uploading anything.
+        # Pinned so a wrangler release cannot change the build under us.
+        run: npx --yes wrangler@4.131.1 deploy --dry-run --outdir "$RUNNER_TEMP/dry"
+        env:
+          WRANGLER_SEND_METRICS: "false"

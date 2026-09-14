@@ -1,7 +1,12 @@
+# NOT read by wrangler any more: assets.directory is "./public" (2026-09-13),
+# and wrangler reads .assetsignore from inside the assets directory — see
+# public/.assetsignore. Kept so that if the directory is ever pointed back at
+# the repo root, repo internals and local secrets still stay unpublished.
 _worker.js
 wrangler.jsonc
 functions/
 src/
+tests/
 .git
 .git/
 .github/
@@ -10,6 +15,7 @@ node_modules/
 package.json
 package-lock.json
 *.md
+AUDIT-FIXES.md
 .dev.vars
 .dev.vars*
 .env

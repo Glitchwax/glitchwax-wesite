@@ -1,4 +1,32 @@
 /*============================
+TURNSTILE HELPERS
+
+The "are you human" widget is optional: the Worker injects it into the forms
+only when a Turnstile site key is configured. With no widget on the page both
+helpers do nothing, and the request body is byte-for-byte what it was before
+(JSON.stringify drops an undefined token).
+==============================*/
+
+function glitchwaxTurnstileToken(form) {
+    var field = form.querySelector("[name='cf-turnstile-response']");
+
+    return field && field.value ? field.value : undefined;
+}
+
+function glitchwaxTurnstileReset(form) {
+    var widget = form.querySelector(".cf-turnstile");
+
+    // Every token is single use, so a second submission needs a fresh one.
+    if (widget && window.turnstile && typeof window.turnstile.reset === "function") {
+        try {
+            window.turnstile.reset(widget);
+        } catch (error) {
+            // Widget not rendered yet; nothing to reset.
+        }
+    }
+}
+
+/*============================
 MAIN PAGE GLITCH EFFECT
 ==============================*/
 
@@ -334,7 +362,8 @@ document.addEventListener("DOMContentLoaded", function () {
             name: nameInput.value.trim(),
             email: emailInput.value.trim(),
             phone: phoneInput.value.trim(),
-            comment: commentInput.value.trim()
+            comment: commentInput.value.trim(),
+            turnstileToken: glitchwaxTurnstileToken(contactForm)
         };
 
         try {
@@ -368,6 +397,7 @@ document.addEventListener("DOMContentLoaded", function () {
         } catch (error) {
             formStatus.textContent = error.message || "Message could not be sent. Please try again later.";
         } finally {
+            glitchwaxTurnstileReset(contactForm);
             submitButton.disabled = false;
             submitButton.textContent = "Send Message";
         }
@@ -499,7 +529,8 @@ document.addEventListener("DOMContentLoaded", function () {
                     phone: phone,
                     smsConsent: smsInput.checked,
                     website: form.querySelector(".signup-hp").value,
-                    ref: new URLSearchParams(window.location.search).get("ref")
+                    ref: new URLSearchParams(window.location.search).get("ref"),
+                    turnstileToken: glitchwaxTurnstileToken(form)
                 })
             });
 
@@ -514,6 +545,7 @@ document.addEventListener("DOMContentLoaded", function () {
         } catch (error) {
             say(error.message || "Signup didn't go through. Please try again.", false);
         } finally {
+            glitchwaxTurnstileReset(form);
             button.disabled = false;
         }
     });
@@ -779,7 +811,8 @@ document.addEventListener("DOMContentLoaded", function () {
             publicOk: kind === "review" && publicOkInput.checked,
             source: source,
             website: reviewForm.querySelector(".signup-hp").value,
-            ref: params.get("ref")
+            ref: params.get("ref"),
+            turnstileToken: glitchwaxTurnstileToken(reviewForm)
         };
 
         try {
@@ -815,6 +848,7 @@ document.addEventListener("DOMContentLoaded", function () {
         } catch (error) {
             reviewStatus.textContent = error.message || "That didn't go through. Try again.";
         } finally {
+            glitchwaxTurnstileReset(reviewForm);
             submitButton.disabled = false;
 
             if (submitButton.textContent === "Sending...") {

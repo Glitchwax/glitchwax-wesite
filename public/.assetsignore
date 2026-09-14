@@ -1,0 +1,25 @@
+# Wrangler reads THIS file (it lives in the assets directory, public/).
+# Only public/ is uploaded, so repo internals (src/, wrangler.jsonc, .git,
+# .dev.vars, .env, docs) are outside the upload by construction. These rules
+# are a second line of defence in case one is ever copied in here by mistake.
+_worker.js
+_routes.json
+wrangler.json
+wrangler.jsonc
+wrangler.toml
+functions/
+src/
+.git
+.git/
+.github/
+node_modules/
+.wrangler/
+package.json
+package-lock.json
+*.md
+.dev.vars
+.dev.vars*
+.env
+.env*
+.gitignore
+.assetsignore
