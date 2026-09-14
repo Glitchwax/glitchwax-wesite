@@ -860,3 +860,161 @@ document.addEventListener("DOMContentLoaded", function () {
     paintMeter();
     applyKind();
 });
+
+/*============================
+PRODUCT GALLERY + LIGHTBOX
+
+Both product pages share the same markup: one main image and a row of
+thumbnails. Clicking a thumbnail swaps the main image; clicking the main
+image opens a full-screen lightbox with previous/next arrows, keyboard
+arrows, swipe on touch, and Escape / backdrop click to close. The lightbox
+is built here so the HTML pages stay static.
+==============================*/
+
+document.addEventListener("DOMContentLoaded", function () {
+    const gallery = document.querySelector(".product-page-gallery");
+
+    if (!gallery) {
+        return;
+    }
+
+    const mainImage = gallery.querySelector(".product-page-main-image img");
+    const thumbs = Array.from(gallery.querySelectorAll(".product-page-thumbnails img"));
+
+    if (!mainImage || thumbs.length === 0) {
+        return;
+    }
+
+    const images = thumbs.map(function (thumb) {
+        return { src: thumb.getAttribute("src"), alt: thumb.getAttribute("alt") || mainImage.alt };
+    });
+
+    let current = Math.max(0, images.findIndex(function (image) {
+        return image.src === mainImage.getAttribute("src");
+    }));
+
+    function showMain(index) {
+        current = (index + images.length) % images.length;
+        mainImage.src = images[current].src;
+        mainImage.alt = images[current].alt;
+        thumbs.forEach(function (thumb, i) {
+            thumb.classList.toggle("is-active", i === current);
+        });
+    }
+
+    thumbs.forEach(function (thumb, index) {
+        thumb.setAttribute("role", "button");
+        thumb.setAttribute("tabindex", "0");
+        thumb.addEventListener("click", function () {
+            showMain(index);
+        });
+        thumb.addEventListener("keydown", function (event) {
+            if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                showMain(index);
+            }
+        });
+    });
+
+    // ---- lightbox -------------------------------------------------------
+    const lightbox = document.createElement("div");
+    lightbox.className = "gw-lightbox";
+    lightbox.id = "gw-lightbox";
+    lightbox.setAttribute("role", "dialog");
+    lightbox.setAttribute("aria-modal", "true");
+    lightbox.setAttribute("aria-label", "Product photos");
+    lightbox.hidden = true;
+    lightbox.innerHTML =
+        '<button type="button" class="gw-lightbox-close" aria-label="Close">&times;</button>' +
+        '<button type="button" class="gw-lightbox-arrow gw-lightbox-prev" aria-label="Previous photo">&#8249;</button>' +
+        '<figure class="gw-lightbox-figure"><img class="gw-lightbox-image" alt=""><figcaption class="gw-lightbox-count"></figcaption></figure>' +
+        '<button type="button" class="gw-lightbox-arrow gw-lightbox-next" aria-label="Next photo">&#8250;</button>';
+    document.body.appendChild(lightbox);
+
+    const lightboxImage = lightbox.querySelector(".gw-lightbox-image");
+    const lightboxCount = lightbox.querySelector(".gw-lightbox-count");
+    const figure = lightbox.querySelector(".gw-lightbox-figure");
+    let lastFocus = null;
+
+    function paintLightbox() {
+        lightboxImage.src = images[current].src;
+        lightboxImage.alt = images[current].alt;
+        lightboxCount.textContent = (current + 1) + " / " + images.length;
+    }
+
+    function openLightbox(index) {
+        showMain(index);
+        paintLightbox();
+        lastFocus = document.activeElement;
+        lightbox.hidden = false;
+        document.body.classList.add("gw-lightbox-open");
+        lightbox.querySelector(".gw-lightbox-next").focus();
+    }
+
+    function closeLightbox() {
+        lightbox.hidden = true;
+        document.body.classList.remove("gw-lightbox-open");
+        if (lastFocus && typeof lastFocus.focus === "function") {
+            lastFocus.focus();
+        }
+    }
+
+    function step(direction) {
+        showMain(current + direction);
+        paintLightbox();
+    }
+
+    mainImage.setAttribute("role", "button");
+    mainImage.setAttribute("tabindex", "0");
+    mainImage.setAttribute("aria-label", "Open product photos");
+    mainImage.addEventListener("click", function () {
+        openLightbox(current);
+    });
+    mainImage.addEventListener("keydown", function (event) {
+        if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            openLightbox(current);
+        }
+    });
+
+    lightbox.querySelector(".gw-lightbox-close").addEventListener("click", closeLightbox);
+    lightbox.querySelector(".gw-lightbox-prev").addEventListener("click", function () { step(-1); });
+    lightbox.querySelector(".gw-lightbox-next").addEventListener("click", function () { step(1); });
+    lightbox.addEventListener("click", function (event) {
+        // Backdrop click closes; clicks on the photo or the buttons do not.
+        if (event.target === lightbox || event.target === figure) {
+            closeLightbox();
+        }
+    });
+
+    document.addEventListener("keydown", function (event) {
+        if (lightbox.hidden) {
+            return;
+        }
+        if (event.key === "Escape") {
+            closeLightbox();
+        } else if (event.key === "ArrowRight") {
+            step(1);
+        } else if (event.key === "ArrowLeft") {
+            step(-1);
+        }
+    });
+
+    // Swipe left/right on touch screens.
+    let touchStartX = null;
+    lightbox.addEventListener("touchstart", function (event) {
+        touchStartX = event.touches.length === 1 ? event.touches[0].clientX : null;
+    }, { passive: true });
+    lightbox.addEventListener("touchend", function (event) {
+        if (touchStartX === null) {
+            return;
+        }
+        const delta = event.changedTouches[0].clientX - touchStartX;
+        touchStartX = null;
+        if (Math.abs(delta) > 40) {
+            step(delta < 0 ? 1 : -1);
+        }
+    });
+
+    showMain(current);
+});

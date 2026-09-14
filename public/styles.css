@@ -90,7 +90,7 @@ a {
     z-index: 0;
 }
 
-body > *:not(.background-logo):not(#glitch-overlay) {
+body > *:not(.background-logo):not(#glitch-overlay):not(#gw-lightbox) {
     position: relative;
     z-index: 1;
 }
@@ -646,6 +646,137 @@ body > *:not(.background-logo):not(#glitch-overlay) {
 
     .product-page-thumbnails {
         grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+/* =========================
+   PRODUCT GALLERY + LIGHTBOX
+   (script.js builds the .gw-lightbox element on the product pages)
+========================= */
+
+.product-page-main-image img {
+    cursor: zoom-in;
+}
+
+.product-page-thumbnails img.is-active {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 2px rgba(254, 149, 98, 0.35);
+}
+
+/* An id, and it is excluded from the `body > *:not(...)` rule near the top
+   that pins every other top-level element to position: relative / z-index: 1
+   (that rule's :not(#id) gives it id-level specificity). */
+#gw-lightbox {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: grid;
+    grid-template-columns: 64px 1fr 64px;
+    align-items: center;
+    background-color: rgba(15, 15, 18, 0.94);
+    padding: 24px 12px;
+}
+
+#gw-lightbox[hidden] {
+    display: none;
+}
+
+body.gw-lightbox-open {
+    overflow: hidden;
+}
+
+.gw-lightbox-figure {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    max-height: 100%;
+}
+
+.gw-lightbox-image {
+    max-width: 100%;
+    max-height: calc(100vh - 110px);
+    object-fit: contain;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--color-border);
+    box-shadow: var(--shadow-md);
+    background-color: var(--color-surface);
+}
+
+.gw-lightbox-count {
+    color: var(--color-text-muted);
+    font-size: 0.9rem;
+    letter-spacing: 0.08em;
+}
+
+.gw-lightbox-arrow,
+.gw-lightbox-close {
+    background-color: var(--color-surface-alt);
+    color: var(--color-text);
+    border: 1px solid var(--color-border);
+    border-radius: 999px;
+    cursor: pointer;
+    line-height: 1;
+    transition:
+        background-color var(--transition-speed) ease,
+        color var(--transition-speed) ease,
+        border-color var(--transition-speed) ease;
+}
+
+.gw-lightbox-arrow {
+    width: 48px;
+    height: 48px;
+    justify-self: center;
+    font-size: 2rem;
+    padding-bottom: 4px;
+}
+
+.gw-lightbox-close {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    width: 44px;
+    height: 44px;
+    font-size: 1.8rem;
+}
+
+.gw-lightbox-arrow:hover,
+.gw-lightbox-close:hover,
+.gw-lightbox-arrow:focus-visible,
+.gw-lightbox-close:focus-visible {
+    background-color: var(--color-primary);
+    color: var(--color-on-primary);
+    border-color: var(--color-primary);
+    outline: none;
+}
+
+@media (max-width: 600px) {
+    #gw-lightbox {
+        grid-template-columns: 1fr;
+        padding: 56px 8px 16px;
+    }
+
+    .gw-lightbox-arrow {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 42px;
+        height: 42px;
+        font-size: 1.6rem;
+        opacity: 0.85;
+    }
+
+    .gw-lightbox-prev {
+        left: 10px;
+    }
+
+    .gw-lightbox-next {
+        right: 10px;
+    }
+
+    .gw-lightbox-image {
+        max-height: calc(100vh - 120px);
     }
 }
 
