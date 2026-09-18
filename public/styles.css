@@ -210,8 +210,13 @@ body > *:not(.background-logo):not(#glitch-overlay):not(#gw-lightbox) {
 .button {
     display: inline-block;
     padding: 12px 20px;
+    border: 0;
     border-radius: var(--radius-sm);
+    font: inherit;
     font-weight: bold;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
     transition:
         background-color var(--transition-speed) ease,
         transform var(--transition-speed) ease,
@@ -655,6 +660,7 @@ body > *:not(.background-logo):not(#glitch-overlay):not(#gw-lightbox) {
 
 .careers-section {
     padding-top: 1rem;
+    padding-bottom: 4rem;
 }
 
 .careers-roles {
