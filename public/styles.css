@@ -1881,6 +1881,42 @@ CONTACT PAGE BUTTON STYLING AND EFFECTS
 }
 
 /* =========================
+   PRODUCT PAGE RESPONSIVE FIX
+   Keep these rules after the desktop product-page styles so the mobile
+   layout wins in the cascade.
+========================= */
+
+@media (max-width: 900px) {
+    .product-page-grid {
+        grid-template-columns: 1fr;
+        gap: 28px;
+    }
+
+    .product-page-gallery,
+    .product-page-details {
+        min-width: 0;
+    }
+
+    .product-page-thumbnails {
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 600px) {
+    .product-page-hero {
+        padding: 36px 0 30px;
+    }
+
+    .product-page-details {
+        padding: 22px;
+    }
+
+    .product-page-thumbnails {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+/* =========================
    EMAIL / SMS SIGNUP
 ========================= */
 
