@@ -12,6 +12,7 @@ SQUARE THEN PROCESSES THE ORDER, VERIFIES PRICING, AND GENERATES A SECURE CHECK 
   <meta name="description" content="Shop Glitch Wax products including Stick O Wax and the 2 Pack.">
   <link rel="stylesheet" href="styles.css">
 </head>
+
 <body>
   <div class="background-logo"></div>
 
@@ -26,31 +27,106 @@ SQUARE THEN PROCESSES THE ORDER, VERIFIES PRICING, AND GENERATES A SECURE CHECK 
         <a href="store.html">Store</a>
         <a href="contact.html">Contact</a>
         <a href="careers.html">Careers</a>
-    </nav>
+      </nav>
     </div>
   </header>
 
   <main class="order-page">
+
+    <!-- =========================
+         STORE HEADER
+    ========================== -->
     <section class="order-hero">
       <div class="container">
         <h1>Place Your Order</h1>
+
         <p>
           Choose your products below.
         </p>
       </div>
     </section>
+
+
+    <!-- =========================
+         FREE STICKER PACK PROMOTION
+    ========================== -->
+    <section
+      class="sticker-promo-section"
+      aria-labelledby="stickerPromoHeading"
+    >
+      <div class="container">
+
+        <div class="sticker-promo-card">
+
+          <div class="sticker-promo-copy">
+            <p class="section-label">Free With Every Order</p>
+
+            <h2 id="stickerPromoHeading">
+              Every Order Includes a
+              <span>Free Sticker Pack</span>
+            </h2>
+
+            <p>
+              Every Glitch Wax order comes with a free sticker pack.
+              No code. No add-on. Just order your wax and we'll pack
+              the stickers in with it.
+            </p>
+          </div>
+
+          <div
+            class="sticker-promo-art"
+            aria-hidden="true"
+          >
+            <img
+              src="images/sticker_one.png"
+              class="promo-sticker-image promo-sticker-one"
+              alt=""
+            >
+
+            <img
+              src="images/sticker_two.png"
+              class="promo-sticker-image promo-sticker-two"
+              alt=""
+            >
+
+            <img
+              src="images/sticker_three.png"
+              class="promo-sticker-image promo-sticker-three"
+              alt=""
+            >
+
+            <img
+              src="images/sticker_four.png"
+              class="promo-sticker-image promo-sticker-four"
+              alt=""
+            >
+          </div>
+
+      </div>
+    </section>
+
+
+    <!-- =========================
+         PRODUCTS
+    ========================== -->
     <section class="order-section" id="order-products">
       <div class="container">
+
         <div class="order-products-grid">
 
+          <!-- STICK O WAX -->
           <article class="order-card">
+
             <h2>
               <a href="product-single.html">Stick O Wax</a>
             </h2>
 
             <div class="order-card-image">
               <a href="product-single.html">
-                <img src="images/stick-o-wax-card.jpg" alt="Stick O Wax">
+                <img
+                  src="images/stick-o-wax-card.jpg"
+                  alt="Stick O Wax"
+                >
               </a>
             </div>
 
@@ -58,11 +134,17 @@ SQUARE THEN PROCESSES THE ORDER, VERIFIES PRICING, AND GENERATES A SECURE CHECK 
               <p>2.5 oz top-fill twist container</p>
               <p>Smooth, consistent glide</p>
               <p>Available in black and white cases</p>
-              <p class="order-card-price">$8.50</p>
+
+              <p class="order-card-price">
+                $8.50
+              </p>
             </div>
 
             <div class="order-card-select">
-              <label for="stick-white-quantity">White Case</label>
+              <label for="stick-white-quantity">
+                White Case
+              </label>
+
               <select
                 id="stick-white-quantity"
                 class="quantity-select"
@@ -82,7 +164,10 @@ SQUARE THEN PROCESSES THE ORDER, VERIFIES PRICING, AND GENERATES A SECURE CHECK 
             </div>
 
             <div class="order-card-select">
-              <label for="stick-black-quantity">Black Case</label>
+              <label for="stick-black-quantity">
+                Black Case
+              </label>
+
               <select
                 id="stick-black-quantity"
                 class="quantity-select"
@@ -104,16 +189,23 @@ SQUARE THEN PROCESSES THE ORDER, VERIFIES PRICING, AND GENERATES A SECURE CHECK 
             <p class="summary-small">
               Maximum 5 total Stick O Wax per order.
             </p>
+
           </article>
 
+
+          <!-- TWO PACK -->
           <article class="order-card">
+
             <h2>
               <a href="product-double.html">Two Pack</a>
             </h2>
 
             <div class="order-card-image">
               <a href="product-double.html">
-                <img src="images/two-pack-card.jpg" alt="Glitch Wax 2 Pack">
+                <img
+                  src="images/two-pack-card.jpg"
+                  alt="Glitch Wax Two Pack"
+                >
               </a>
             </div>
 
@@ -121,12 +213,17 @@ SQUARE THEN PROCESSES THE ORDER, VERIFIES PRICING, AND GENERATES A SECURE CHECK 
               <p>Two 2.5 oz wax bars</p>
               <p>Long-lasting, durable formula</p>
               <p>Available in white, blue/red, and yellow</p>
-              <p>Includes free sticker</p>
-              <p class="order-card-price">$10.00</p>
+
+              <p class="order-card-price">
+                $10.00
+              </p>
             </div>
 
             <div class="order-card-select">
-              <label for="two-pack-white-quantity">White Wax</label>
+              <label for="two-pack-white-quantity">
+                White Wax
+              </label>
+
               <select
                 id="two-pack-white-quantity"
                 class="quantity-select"
@@ -146,7 +243,10 @@ SQUARE THEN PROCESSES THE ORDER, VERIFIES PRICING, AND GENERATES A SECURE CHECK 
             </div>
 
             <div class="order-card-select">
-              <label for="two-pack-blue-red-quantity">Blue & Red Wax</label>
+              <label for="two-pack-blue-red-quantity">
+                Blue &amp; Red Wax
+              </label>
+
               <select
                 id="two-pack-blue-red-quantity"
                 class="quantity-select"
@@ -166,7 +266,10 @@ SQUARE THEN PROCESSES THE ORDER, VERIFIES PRICING, AND GENERATES A SECURE CHECK 
             </div>
 
             <div class="order-card-select">
-              <label for="two-pack-yellow-quantity">Yellow Wax</label>
+              <label for="two-pack-yellow-quantity">
+                Yellow Wax
+              </label>
+
               <select
                 id="two-pack-yellow-quantity"
                 class="quantity-select"
@@ -188,11 +291,17 @@ SQUARE THEN PROCESSES THE ORDER, VERIFIES PRICING, AND GENERATES A SECURE CHECK 
             <p class="summary-small">
               Maximum 5 total Two Packs per order.
             </p>
+
           </article>
 
         </div>
 
+
+        <!-- =========================
+             ORDER SUMMARY
+        ========================== -->
         <section class="order-summary">
+
           <div class="order-summary-card">
             <h2>Order Summary</h2>
 
@@ -202,138 +311,311 @@ SQUARE THEN PROCESSES THE ORDER, VERIFIES PRICING, AND GENERATES A SECURE CHECK 
             </div>
 
             <p class="summary-note">
-              Tax, shipping, and transaction fees will be calculated on the next screen.
+              Tax, shipping, and transaction fees will be calculated
+              on the next screen.
             </p>
 
-            <button type="button" id="checkout-btn" class="checkout-btn">
+            <button
+              type="button"
+              id="checkout-btn"
+              class="checkout-btn"
+            >
               Continue to Checkout
             </button>
 
             <p class="summary-small">
-              You will be redirected to a secure checkout page after confirming your order.
+              You will be redirected to a secure checkout page
+              after confirming your order.
             </p>
           </div>
+
         </section>
+
       </div>
     </section>
+
   </main>
 
-    <section class="signup" aria-labelledby="signupHeading">
-        <div class="container signup-inner">
-            <div class="signup-copy">
-                <p class="section-label">Stay in the loop</p>
-                <h2 id="signupHeading">Drops, restocks, rider clips.</h2>
-                <p>No spam. Unsubscribe anytime.</p>
-            </div>
-            <form id="signupForm" class="signup-form" novalidate>
-                <div class="signup-fields">
-                    <input type="email" name="email" id="signupEmail" placeholder="you@email.com" autocomplete="email" required>
-                    <input type="tel" name="phone" id="signupPhone" placeholder="Phone (optional, US)" autocomplete="tel">
-                    <button type="submit" class="button button-primary">Sign up</button>
-                </div>
-                <label class="signup-consent">
-                    <input type="checkbox" name="smsConsent" id="signupSms">
-                    <span>Text me too. Msg &amp; data rates may apply. Reply STOP to opt out.</span>
-                </label>
-                <input type="text" name="website" class="signup-hp" tabindex="-1" autocomplete="off" aria-hidden="true">
-                <p class="field-message" id="signupStatus" role="status"></p>
-            </form>
-        </div>
-    </section>
 
+  <!-- =========================
+       EMAIL / SMS SIGNUP
+  ========================== -->
+  <section
+    class="signup"
+    aria-labelledby="signupHeading"
+  >
+    <div class="container signup-inner">
+
+      <div class="signup-copy">
+        <p class="section-label">
+          Stay in the loop
+        </p>
+
+        <h2 id="signupHeading">
+          Drops, restocks, rider clips.
+        </h2>
+
+        <p>
+          No spam. Unsubscribe anytime.
+        </p>
+      </div>
+
+      <form
+        id="signupForm"
+        class="signup-form"
+        novalidate
+      >
+
+        <div class="signup-fields">
+
+          <input
+            type="email"
+            name="email"
+            id="signupEmail"
+            placeholder="you@email.com"
+            autocomplete="email"
+            required
+          >
+
+          <input
+            type="tel"
+            name="phone"
+            id="signupPhone"
+            placeholder="Phone (optional, US)"
+            autocomplete="tel"
+          >
+
+          <button
+            type="submit"
+            class="button button-primary"
+          >
+            Sign up
+          </button>
+
+        </div>
+
+        <label class="signup-consent">
+
+          <input
+            type="checkbox"
+            name="smsConsent"
+            id="signupSms"
+          >
+
+          <span>
+            Text me too. Msg &amp; data rates may apply.
+            Reply STOP to opt out.
+          </span>
+
+        </label>
+
+        <input
+          type="text"
+          name="website"
+          class="signup-hp"
+          tabindex="-1"
+          autocomplete="off"
+          aria-hidden="true"
+        >
+
+        <p
+          class="field-message"
+          id="signupStatus"
+          role="status"
+        ></p>
+
+      </form>
+
+    </div>
+  </section>
+
+
+  <!-- =========================
+       FOOTER
+  ========================== -->
   <footer class="site-footer">
+
     <div class="container footer-inner">
-      <p>&copy; 2026 Glitch Wax. All rights reserved.</p>
+
+      <p>
+        &copy; 2026 Glitch Wax. All rights reserved.
+      </p>
+
       <div class="footer-links">
         <a href="index.html">Home</a>
         <a href="store.html">Store</a>
         <a href="contact.html">Contact</a>
         <a href="careers.html">Careers</a>
+      </div>
+
     </div>
-    </div>
+
   </footer>
 
+
+  <!-- =========================
+       ORDER / CHECKOUT SCRIPT
+  ========================== -->
   <script>
-    const quantitySelects = Array.from(document.querySelectorAll('.quantity-select'));
-    const subtotalElement = document.getElementById('subtotal');
-    const checkoutButton = document.getElementById('checkout-btn');
+    const quantitySelects = Array.from(
+      document.querySelectorAll('.quantity-select')
+    );
+
+    const subtotalElement =
+      document.getElementById('subtotal');
+
+    const checkoutButton =
+      document.getElementById('checkout-btn');
+
 
     function getQuantity(select) {
       return parseInt(select.value, 10) || 0;
     }
 
+
     function getGroupSelects(groupName) {
-      return quantitySelects.filter((select) => select.dataset.group === groupName);
+      return quantitySelects.filter(
+        (select) => select.dataset.group === groupName
+      );
     }
+
 
     function getGroupTotal(groupName) {
-      return getGroupSelects(groupName).reduce((total, select) => {
-        return total + getQuantity(select);
-      }, 0);
+      return getGroupSelects(groupName).reduce(
+        (total, select) => {
+          return total + getQuantity(select);
+        },
+        0
+      );
     }
 
+
     function updateQuantityLimits(changedSelect) {
-      const groupNames = new Set(quantitySelects.map((select) => select.dataset.group));
+      const groupNames = new Set(
+        quantitySelects.map(
+          (select) => select.dataset.group
+        )
+      );
 
       groupNames.forEach((groupName) => {
-        const groupSelects = getGroupSelects(groupName);
+        const groupSelects =
+          getGroupSelects(groupName);
 
         if (groupSelects.length === 0) {
           return;
         }
 
-        const maxTotal = parseInt(groupSelects[0].dataset.maxTotal, 10) || 5;
-        const groupLabel = groupSelects[0].dataset.groupLabel || 'this product';
+        const maxTotal =
+          parseInt(
+            groupSelects[0].dataset.maxTotal,
+            10
+          ) || 5;
 
-        let groupTotal = getGroupTotal(groupName);
+        const groupLabel =
+          groupSelects[0].dataset.groupLabel ||
+          'this product';
 
-        if (changedSelect && changedSelect.dataset.group === groupName && groupTotal > maxTotal) {
-          const overflow = groupTotal - maxTotal;
-          const changedQuantity = getQuantity(changedSelect);
-          const correctedQuantity = Math.max(0, changedQuantity - overflow);
+        let groupTotal =
+          getGroupTotal(groupName);
 
-          changedSelect.value = correctedQuantity.toString();
-          groupTotal = getGroupTotal(groupName);
+        if (
+          changedSelect &&
+          changedSelect.dataset.group === groupName &&
+          groupTotal > maxTotal
+        ) {
 
-          alert('You can select up to ' + maxTotal + ' total ' + groupLabel + ' per order.');
+          const overflow =
+            groupTotal - maxTotal;
+
+          const changedQuantity =
+            getQuantity(changedSelect);
+
+          const correctedQuantity =
+            Math.max(
+              0,
+              changedQuantity - overflow
+            );
+
+          changedSelect.value =
+            correctedQuantity.toString();
+
+          groupTotal =
+            getGroupTotal(groupName);
+
+          alert(
+            'You can select up to ' +
+            maxTotal +
+            ' total ' +
+            groupLabel +
+            ' per order.'
+          );
         }
 
         groupSelects.forEach((select) => {
-          const currentQuantity = getQuantity(select);
-          const otherQuantity = groupTotal - currentQuantity;
-          const maxAllowedForThisSelect = maxTotal - otherQuantity;
+          const currentQuantity =
+            getQuantity(select);
 
-          Array.from(select.options).forEach((option) => {
-            const optionValue = parseInt(option.value, 10) || 0;
-            option.disabled = optionValue > maxAllowedForThisSelect;
-          });
+          const otherQuantity =
+            groupTotal - currentQuantity;
+
+          const maxAllowedForThisSelect =
+            maxTotal - otherQuantity;
+
+          Array.from(select.options).forEach(
+            (option) => {
+
+              const optionValue =
+                parseInt(option.value, 10) || 0;
+
+              option.disabled =
+                optionValue >
+                maxAllowedForThisSelect;
+            }
+          );
         });
       });
     }
+
 
     function updateSubtotal() {
       let subtotal = 0;
 
       quantitySelects.forEach((select) => {
-        const price = parseFloat(select.dataset.price);
-        const quantity = getQuantity(select);
+        const price =
+          parseFloat(select.dataset.price);
+
+        const quantity =
+          getQuantity(select);
+
         subtotal += price * quantity;
       });
 
-      subtotalElement.textContent = '$' + subtotal.toFixed(2);
+      subtotalElement.textContent =
+        '$' + subtotal.toFixed(2);
     }
+
 
     function resetCheckoutButton() {
       checkoutButton.disabled = false;
-      checkoutButton.textContent = 'Continue to Checkout';
+      checkoutButton.textContent =
+        'Continue to Checkout';
     }
 
+
     function applyPreselectedProduct() {
-      const params = new URLSearchParams(window.location.search);
-      const product = params.get('product');
+      const params =
+        new URLSearchParams(
+          window.location.search
+        );
+
+      const product =
+        params.get('product');
 
       if (product === 'stick') {
-        const stickWhiteSelect = document.getElementById('stick-white-quantity');
+        const stickWhiteSelect =
+          document.getElementById(
+            'stick-white-quantity'
+          );
 
         if (stickWhiteSelect) {
           stickWhiteSelect.value = '1';
@@ -341,7 +623,10 @@ SQUARE THEN PROCESSES THE ORDER, VERIFIES PRICING, AND GENERATES A SECURE CHECK 
       }
 
       if (product === 'two-pack') {
-        const twoPackWhiteSelect = document.getElementById('two-pack-white-quantity');
+        const twoPackWhiteSelect =
+          document.getElementById(
+            'two-pack-white-quantity'
+          );
 
         if (twoPackWhiteSelect) {
           twoPackWhiteSelect.value = '1';
@@ -352,85 +637,195 @@ SQUARE THEN PROCESSES THE ORDER, VERIFIES PRICING, AND GENERATES A SECURE CHECK 
       updateSubtotal();
     }
 
+
     quantitySelects.forEach((select) => {
-      select.addEventListener('change', function () {
-        updateQuantityLimits(select);
-        updateSubtotal();
-      });
+
+      select.addEventListener(
+        'change',
+        function () {
+          updateQuantityLimits(select);
+          updateSubtotal();
+        }
+      );
+
     });
 
-    checkoutButton.addEventListener('click', async () => {
-      const stickWhiteQty = getQuantity(document.getElementById('stick-white-quantity'));
-      const stickBlackQty = getQuantity(document.getElementById('stick-black-quantity'));
 
-      const twoPackWhiteQty = getQuantity(document.getElementById('two-pack-white-quantity'));
-      const twoPackBlueRedQty = getQuantity(document.getElementById('two-pack-blue-red-quantity'));
-      const twoPackYellowQty = getQuantity(document.getElementById('two-pack-yellow-quantity'));
+    checkoutButton.addEventListener(
+      'click',
+      async () => {
 
-      const stickTotal = stickWhiteQty + stickBlackQty;
-      const twoPackTotal = twoPackWhiteQty + twoPackBlueRedQty + twoPackYellowQty;
+        const stickWhiteQty =
+          getQuantity(
+            document.getElementById(
+              'stick-white-quantity'
+            )
+          );
 
-      if (stickTotal === 0 && twoPackTotal === 0) {
-        alert('Please select at least one product before continuing.');
-        return;
-      }
+        const stickBlackQty =
+          getQuantity(
+            document.getElementById(
+              'stick-black-quantity'
+            )
+          );
 
-      if (stickTotal > 5) {
-        alert('You can select up to 5 total Stick O Wax per order.');
-        return;
-      }
+        const twoPackWhiteQty =
+          getQuantity(
+            document.getElementById(
+              'two-pack-white-quantity'
+            )
+          );
 
-      if (twoPackTotal > 5) {
-        alert('You can select up to 5 total Two Packs per order.');
-        return;
-      }
+        const twoPackBlueRedQty =
+          getQuantity(
+            document.getElementById(
+              'two-pack-blue-red-quantity'
+            )
+          );
 
-      checkoutButton.disabled = true;
-      checkoutButton.textContent = 'Creating checkout...';
+        const twoPackYellowQty =
+          getQuantity(
+            document.getElementById(
+              'two-pack-yellow-quantity'
+            )
+          );
 
-      try {
-        const response = await fetch('/api/create-checkout', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            stickOWaxWhiteQty: stickWhiteQty,
-            stickOWaxBlackQty: stickBlackQty,
-            doublePackWhiteQty: twoPackWhiteQty,
-            doublePackBlueRedQty: twoPackBlueRedQty,
-            doublePackYellowQty: twoPackYellowQty,
-            ref: new URLSearchParams(window.location.search).get('ref')
-          })
-        });
+        const stickTotal =
+          stickWhiteQty +
+          stickBlackQty;
 
-        const data = await response.json();
+        const twoPackTotal =
+          twoPackWhiteQty +
+          twoPackBlueRedQty +
+          twoPackYellowQty;
 
-        if (!response.ok) {
-          console.error(data);
-          alert('Something went wrong creating checkout. Please try again.');
-          resetCheckoutButton();
+
+        if (
+          stickTotal === 0 &&
+          twoPackTotal === 0
+        ) {
+          alert(
+            'Please select at least one product before continuing.'
+          );
+
           return;
         }
 
-        window.location.href = data.checkoutUrl;
-      } catch (error) {
-        console.error(error);
-        alert('Something went wrong creating checkout. Please try again.');
-        resetCheckoutButton();
-      }
-    });
 
-    window.addEventListener('pageshow', function () {
-      resetCheckoutButton();
-      updateQuantityLimits();
-      updateSubtotal();
-    });
+        if (stickTotal > 5) {
+          alert(
+            'You can select up to 5 total Stick O Wax per order.'
+          );
+
+          return;
+        }
+
+
+        if (twoPackTotal > 5) {
+          alert(
+            'You can select up to 5 total Two Packs per order.'
+          );
+
+          return;
+        }
+
+
+        checkoutButton.disabled = true;
+
+        checkoutButton.textContent =
+          'Creating checkout...';
+
+
+        try {
+
+          const response =
+            await fetch(
+              '/api/create-checkout',
+              {
+                method: 'POST',
+
+                headers: {
+                  'Content-Type':
+                    'application/json'
+                },
+
+                body: JSON.stringify({
+                  stickOWaxWhiteQty:
+                    stickWhiteQty,
+
+                  stickOWaxBlackQty:
+                    stickBlackQty,
+
+                  doublePackWhiteQty:
+                    twoPackWhiteQty,
+
+                  doublePackBlueRedQty:
+                    twoPackBlueRedQty,
+
+                  doublePackYellowQty:
+                    twoPackYellowQty,
+
+                  ref:
+                    new URLSearchParams(
+                      window.location.search
+                    ).get('ref')
+                })
+              }
+            );
+
+
+          const data =
+            await response.json();
+
+
+          if (!response.ok) {
+
+            console.error(data);
+
+            alert(
+              'Something went wrong creating checkout. Please try again.'
+            );
+
+            resetCheckoutButton();
+
+            return;
+          }
+
+
+          window.location.href =
+            data.checkoutUrl;
+
+        } catch (error) {
+
+          console.error(error);
+
+          alert(
+            'Something went wrong creating checkout. Please try again.'
+          );
+
+          resetCheckoutButton();
+        }
+
+      }
+    );
+
+
+    window.addEventListener(
+      'pageshow',
+      function () {
+        resetCheckoutButton();
+        updateQuantityLimits();
+        updateSubtotal();
+      }
+    );
+
 
     applyPreselectedProduct();
     updateQuantityLimits();
     updateSubtotal();
   </script>
-    <script src="script.js"></script>
+
+  <script src="script.js"></script>
+
 </body>
 </html>

@@ -390,6 +390,97 @@ body > *:not(.background-logo):not(#glitch-overlay):not(#gw-lightbox) {
 }
 
 /* =========================
+   FREE STICKER PACK BADGES
+========================= */
+
+.product-card {
+    position: relative;
+    overflow: visible;
+}
+
+.sticker-pack-badge {
+    position: absolute;
+    top: -18px;
+    left: -14px;
+    z-index: 5;
+
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+
+    padding: 9px 14px 8px;
+
+    background-color: #17171b;
+    border: 2px solid var(--color-primary);
+    border-radius: 10px;
+
+    box-shadow:
+        0 5px 14px rgba(0, 0, 0, 0.4),
+        0 0 0 1px rgba(254, 149, 98, 0.12);
+
+    transform: rotate(-3deg);
+
+    pointer-events: none;
+}
+
+.product-card:nth-child(2) .sticker-pack-badge {
+    transform: rotate(3deg);
+}
+
+.sticker-pack-badge-main {
+    color: var(--color-primary);
+
+    font-size: 0.78rem;
+    font-weight: 800;
+    line-height: 1.1;
+
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.sticker-pack-badge-sub {
+    color: var(--color-text);
+
+    margin-top: 3px;
+
+    font-size: 0.66rem;
+    font-weight: 600;
+    line-height: 1;
+
+    white-space: nowrap;
+}
+
+
+/* Keep the badges clean and contained on smaller screens */
+@media (max-width: 600px) {
+    .sticker-pack-badge {
+        top: -14px;
+        left: 10px;
+
+        padding: 8px 12px 7px;
+
+        transform: rotate(-2deg);
+    }
+
+    .product-card:nth-child(2) .sticker-pack-badge {
+        transform: rotate(2deg);
+    }
+
+    .sticker-pack-badge::before {
+        display: none;
+    }
+
+    .sticker-pack-badge-main {
+        font-size: 0.72rem;
+    }
+
+    .sticker-pack-badge-sub {
+        font-size: 0.62rem;
+    }
+}
+
+/* =========================
    CTA
 ========================= */
 
@@ -571,6 +662,345 @@ body > *:not(.background-logo):not(#glitch-overlay):not(#gw-lightbox) {
     color: var(--color-text-muted);
     font-size: 0.9rem;
     margin-top: 10px;
+}
+
+/* =========================
+   FREE STICKER PACK
+   STORE PROMOTION
+========================= */
+
+.sticker-promo-section {
+    padding: 10px 0 20px;
+}
+
+.sticker-promo-card {
+    position: relative;
+    overflow: hidden;
+
+    display: grid;
+    grid-template-columns: minmax(0, 1.45fr) minmax(280px, 0.75fr);
+    align-items: center;
+    gap: 40px;
+
+    padding: 36px 42px;
+
+    background:
+        radial-gradient(
+            circle at 85% 50%,
+            rgba(254, 149, 98, 0.08),
+            transparent 32%
+        ),
+        linear-gradient(
+            135deg,
+            rgba(24, 24, 29, 0.98),
+            rgba(15, 15, 18, 0.98)
+        );
+
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+
+    box-shadow: var(--shadow-sm);
+}
+
+
+/* Subtle orange / blue glitch texture behind the sticker art */
+.sticker-promo-card::before {
+    content: "";
+
+    position: absolute;
+    right: -40px;
+    top: 50%;
+
+    width: 420px;
+    height: 260px;
+
+    transform: translateY(-50%);
+
+    background:
+        radial-gradient(
+            circle at 35% 40%,
+            rgba(242, 108, 23, 0.18) 0 2px,
+            transparent 3px
+        ),
+        radial-gradient(
+            circle at 60% 60%,
+            rgba(37, 78, 150, 0.18) 0 2px,
+            transparent 3px
+        );
+
+    background-size:
+        24px 24px,
+        31px 31px;
+
+    opacity: 0.65;
+
+    pointer-events: none;
+}
+
+
+/* =========================
+   PROMOTION TEXT
+========================= */
+
+.sticker-promo-copy {
+    position: relative;
+    z-index: 2;
+}
+
+.sticker-promo-copy .section-label {
+    margin-bottom: 10px;
+}
+
+.sticker-promo-copy h2 {
+    max-width: 680px;
+
+    margin-bottom: 16px;
+
+    font-size: clamp(2rem, 4vw, 3.4rem);
+    line-height: 1.05;
+}
+
+.sticker-promo-copy h2 span {
+    display: block;
+
+    color: var(--color-primary);
+
+    margin-top: 4px;
+}
+
+.sticker-promo-copy > p:last-child {
+    max-width: 650px;
+
+    color: var(--color-text-muted);
+
+    font-size: 1.05rem;
+    line-height: 1.7;
+}
+
+
+/* =========================
+   STICKER ART
+========================= */
+
+.sticker-promo-art {
+    position: relative;
+    z-index: 2;
+
+    width: 100%;
+    min-height: 220px;
+}
+
+
+/* =========================
+   REAL STICKER ART
+========================= */
+
+.sticker-promo-art {
+    position: relative;
+    z-index: 2;
+
+    width: 100%;
+    min-height: 240px;
+}
+
+.promo-sticker-image {
+    position: absolute;
+
+    display: block;
+
+    max-width: none;
+
+    object-fit: contain;
+
+    filter: drop-shadow(
+        0 10px 12px rgba(0, 0, 0, 0.38)
+    );
+
+    transition:
+        transform 0.2s ease,
+        filter 0.2s ease;
+}
+
+
+/* Purple skull sticker */
+.promo-sticker-one {
+    width: 135px;
+
+    top: 38px;
+    left: 4%;
+
+    transform: rotate(-10deg);
+
+    z-index: 2;
+}
+
+
+/* Blue GLITCH WAX sticker */
+.promo-sticker-two {
+    width: 160px;
+
+    top: 8px;
+    right: 4%;
+
+    transform: rotate(8deg);
+
+    z-index: 1;
+}
+
+
+/* Bomb character sticker */
+.promo-sticker-three {
+    width: 145px;
+
+    bottom: 0;
+    right: 15%;
+
+    transform: rotate(7deg);
+
+    z-index: 4;
+}
+
+
+/* Round splatter sticker */
+.promo-sticker-four {
+    width: 170px;
+
+    top: 24px;
+    left: 50%;
+
+    transform:
+        translateX(-50%)
+        rotate(-2deg);
+
+    z-index: 3;
+}
+
+
+/* =========================
+   STICKER PROMO RESPONSIVE
+========================= */
+
+@media (max-width: 900px) {
+
+    .sticker-promo-section {
+        padding-top: 10px;
+    }
+
+    .sticker-promo-card {
+        grid-template-columns: 1fr;
+        gap: 18px;
+
+        padding: 32px;
+    }
+
+    .sticker-promo-copy {
+        text-align: center;
+    }
+
+    .sticker-promo-copy h2,
+    .sticker-promo-copy > p:last-child {
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .sticker-promo-art {
+        width: min(100%, 360px);
+        min-height: 205px;
+
+        margin: 0 auto;
+    }
+
+.promo-sticker-one {
+    width: 115px;
+}
+
+.promo-sticker-two {
+    width: 140px;
+}
+
+.promo-sticker-three {
+    width: 125px;
+}
+
+.promo-sticker-four {
+    width: 150px;
+}
+
+    .sticker-promo-card::before {
+        right: 50%;
+        top: auto;
+        bottom: -80px;
+
+        transform: translateX(50%);
+    }
+}
+
+
+@media (max-width: 600px) {
+
+    .sticker-promo-section {
+        padding: 6px 0 18px;
+    }
+
+    .sticker-promo-card {
+        gap: 14px;
+
+        padding: 26px 20px 22px;
+
+        border-radius: var(--radius-md);
+    }
+
+    .sticker-promo-copy h2 {
+        font-size: 2rem;
+    }
+
+    .sticker-promo-copy > p:last-child {
+        font-size: 0.95rem;
+    }
+
+    .sticker-promo-art {
+        min-height: 175px;
+        max-width: 290px;
+    }
+
+.sticker-promo-art {
+    min-height: 190px;
+    max-width: 290px;
+}
+
+.promo-sticker-one {
+    width: 95px;
+
+    top: 36px;
+    left: 0;
+}
+
+.promo-sticker-two {
+    width: 115px;
+
+    top: 5px;
+    right: 0;
+}
+
+.promo-sticker-three {
+    width: 105px;
+
+    bottom: 0;
+    right: 11%;
+}
+
+.promo-sticker-four {
+    width: 125px;
+
+    top: 28px;
+    left: 50%;
+}
+
+    .promo-sticker-small::before,
+    .promo-sticker-small::after {
+        width: 36px;
+        height: 4px;
+    }
 }
 
 /* =========================
